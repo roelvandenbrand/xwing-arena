@@ -14,16 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      competition_members: {
+        Row: {
+          competition_id: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          requested_at: string
+          status: Database["public"]["Enums"]["member_status"]
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          requested_at?: string
+          status?: Database["public"]["Enums"]["member_status"]
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          requested_at?: string
+          status?: Database["public"]["Enums"]["member_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_members_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          finished_at: string | null
+          id: string
+          name: string
+          rules_version: Database["public"]["Enums"]["rules_version"]
+          squad_points_limit: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["competition_status"]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          finished_at?: string | null
+          id?: string
+          name: string
+          rules_version?: Database["public"]["Enums"]["rules_version"]
+          squad_points_limit?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["competition_status"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          finished_at?: string | null
+          id?: string
+          name?: string
+          rules_version?: Database["public"]["Enums"]["rules_version"]
+          squad_points_limit?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["competition_status"]
+        }
+        Relationships: []
+      }
+      games: {
+        Row: {
+          competition_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          is_draw: boolean
+          player1_id: string
+          player1_points: number
+          player1_squad_ref: string | null
+          player1_squad_text: string
+          player2_id: string
+          player2_points: number
+          player2_squad_ref: string | null
+          player2_squad_text: string
+          reported_by: string
+          status: Database["public"]["Enums"]["game_status"]
+          winner_id: string | null
+        }
+        Insert: {
+          competition_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          is_draw?: boolean
+          player1_id: string
+          player1_points: number
+          player1_squad_ref?: string | null
+          player1_squad_text?: string
+          player2_id: string
+          player2_points: number
+          player2_squad_ref?: string | null
+          player2_squad_text?: string
+          reported_by: string
+          status?: Database["public"]["Enums"]["game_status"]
+          winner_id?: string | null
+        }
+        Update: {
+          competition_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          is_draw?: boolean
+          player1_id?: string
+          player1_points?: number
+          player1_squad_ref?: string | null
+          player1_squad_text?: string
+          player2_id?: string
+          player2_points?: number
+          player2_squad_ref?: string | null
+          player2_squad_text?: string
+          reported_by?: string
+          status?: Database["public"]["Enums"]["game_status"]
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_competition_member: {
+        Args: { _competition_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "player"
+      competition_status: "draft" | "open" | "running" | "finished"
+      game_status: "pending" | "confirmed" | "rejected"
+      member_status: "pending" | "approved" | "rejected"
+      rules_version: "1.0" | "2.0" | "2.5"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +347,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "player"],
+      competition_status: ["draft", "open", "running", "finished"],
+      game_status: ["pending", "confirmed", "rejected"],
+      member_status: ["pending", "approved", "rejected"],
+      rules_version: ["1.0", "2.0", "2.5"],
+    },
   },
 } as const
