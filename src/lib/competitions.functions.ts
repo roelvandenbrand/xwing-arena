@@ -186,7 +186,11 @@ export const setCompetitionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => statusInput.parse(d))
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: {
+      status: typeof data.status;
+      started_at?: string;
+      finished_at?: string;
+    } = { status: data.status };
     if (data.status === "running") patch.started_at = new Date().toISOString();
     if (data.status === "finished") patch.finished_at = new Date().toISOString();
     const { error } = await context.supabase.from("competitions").update(patch).eq("id", data.id);
