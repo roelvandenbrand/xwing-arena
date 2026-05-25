@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -113,7 +115,55 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <AuthProvider>
+        <AppShell />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function AppShell() {
+  const { user, isAdmin, signOut, loading } = useAuth();
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="border-b bg-card">
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-3">
+          <Link to="/" className="font-bold text-lg">
+            X-Wing League
+          </Link>
+          {user && (
+            <nav className="flex items-center gap-3 text-sm">
+              <Link to="/competitions" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
+                My Competitions
+              </Link>
+              <Link to="/browse" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
+                Browse
+              </Link>
+              {isAdmin && (
+                <Link to="/admin" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
+                  Admin
+                </Link>
+              )}
+              <button
+                onClick={() => signOut()}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Sign out
+              </button>
+            </nav>
+          )}
+          {!user && !loading && (
+            <nav className="flex items-center gap-3 text-sm">
+              <Link to="/login" className="hover:underline">Login</Link>
+              <Link to="/register" className="hover:underline">Register</Link>
+            </nav>
+          )}
+        </div>
+      </header>
+      <main className="flex-1 container mx-auto px-4 py-6">
+        <Outlet />
+      </main>
+    </div>
   );
 }
