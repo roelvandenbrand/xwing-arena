@@ -298,6 +298,8 @@ function CompetitionDetail() {
               {games.map((g) => {
                 const p1Name = data.profiles[g.player1_id] ?? "Unknown";
                 const p2Name = data.profiles[g.player2_id] ?? "Unknown";
+                const p1Faction = FACTIONS.find((f) => f.value === g.player1_faction)?.label;
+                const p2Faction = FACTIONS.find((f) => f.value === g.player2_faction)?.label;
                 const needsMyConfirmation =
                   g.status === "pending" &&
                   g.reported_by !== currentUserId &&
@@ -312,6 +314,11 @@ function CompetitionDetail() {
                       </div>
                       <GameStatusBadge status={g.status} isDraw={g.is_draw} />
                     </div>
+                    {(p1Faction || p2Faction) && (
+                      <div className="text-xs text-muted-foreground">
+                        {p1Faction ?? "—"} vs {p2Faction ?? "—"}
+                      </div>
+                    )}
                     {(g.player1_squad_text || g.player2_squad_text) && (
                       <details className="text-xs text-muted-foreground">
                         <summary className="cursor-pointer">Squads</summary>
