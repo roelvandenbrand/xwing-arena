@@ -116,9 +116,16 @@ function CompetitionDetail() {
   }[competition.status] as "open" | "running" | "finished" | null;
 
   const statusLabel = {
-    open: "Open for joining",
-    running: "Start competition",
+    open: "Publish (open for joining)",
+    running: "Start competition (lock-in & enable games)",
     finished: "Mark finished",
+  };
+
+  const statusHelp: Record<string, string> = {
+    draft: "Draft — only you (admin) can see this competition. Publish it so players can request to join.",
+    open: "Open — visible to everyone in Browse. Players can request to join and you approve them below.",
+    running: "Running — players can log games. You can still approve late join requests.",
+    finished: "Finished — standings are final. Games can still be logged for late entries.",
   };
 
   return (
@@ -160,6 +167,12 @@ function CompetitionDetail() {
           </div>
         )}
       </div>
+
+      {isAdmin && (
+        <div className="rounded-md border border-dashed bg-muted/30 p-3 text-sm text-muted-foreground">
+          {statusHelp[competition.status]}
+        </div>
+      )}
 
       {canLog && (
         <LogGameDialog
