@@ -8,6 +8,7 @@ import {
   removeMember,
   setCompetitionStatus,
   deleteCompetition,
+  adminJoinCompetition,
 } from "@/lib/competitions.functions";
 import { logGame, decideGame, deleteGame } from "@/lib/games.functions";
 import { computeStandings } from "@/lib/standings";
@@ -65,6 +66,7 @@ function CompetitionDetail() {
   const deleteCompFn = useServerFn(deleteCompetition);
   const decideGameFn = useServerFn(decideGame);
   const deleteGameFn = useServerFn(deleteGame);
+  const adminJoinFn = useServerFn(adminJoinCompetition);
 
   const decideMemberMut = useMutation({
     mutationFn: decideMember,
@@ -94,6 +96,11 @@ function CompetitionDetail() {
   const deleteGameMut = useMutation({
     mutationFn: deleteGameFn,
     onSuccess: () => { invalidate(); toast.success("Game deleted"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const adminJoinMut = useMutation({
+    mutationFn: adminJoinFn,
+    onSuccess: () => { invalidate(); toast.success("Joined competition"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -145,6 +152,15 @@ function CompetitionDetail() {
         </div>
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
+            {!myMembership && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => adminJoinMut.mutate({ data: { id } })}
+              >
+                Join as player
+              </Button>
+            )}
             {nextStatus && (
               <Button
                 size="sm"
