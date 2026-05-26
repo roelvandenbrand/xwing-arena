@@ -29,7 +29,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/competitions")({
+export const Route = createFileRoute("/_authenticated/competitions/")({
   head: () => ({ meta: [{ title: "My Competitions — X-Wing League" }] }),
   component: CompetitionsPage,
 });
