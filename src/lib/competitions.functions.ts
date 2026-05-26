@@ -230,3 +230,28 @@ export const removeMember = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const adminJoinCompetition = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => idInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin");
+    if ((roleRows?.length ?? 0) === 0) throw new Error("Admin only");
+    const { error } = await supabase.from("competition_members").upsert(
+      {
+        competition_id: data.id,
+        user_id: userId,
+        status: "approved",
+        decided_at: new Date().toISOString(),
+        decided_by: userId,
+      },
+      { onConflict: "competition_id,user_id" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
