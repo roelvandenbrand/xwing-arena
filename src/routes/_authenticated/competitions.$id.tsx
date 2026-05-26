@@ -10,7 +10,7 @@ import {
   deleteCompetition,
   adminJoinCompetition,
 } from "@/lib/competitions.functions";
-import { logGame, decideGame, deleteGame } from "@/lib/games.functions";
+import { logGame, decideGame, deleteGame, FACTIONS } from "@/lib/games.functions";
 import { computeStandings } from "@/lib/standings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -298,6 +298,8 @@ function CompetitionDetail() {
               {games.map((g) => {
                 const p1Name = data.profiles[g.player1_id] ?? "Unknown";
                 const p2Name = data.profiles[g.player2_id] ?? "Unknown";
+                const p1Faction = FACTIONS.find((f) => f.value === g.player1_faction)?.label;
+                const p2Faction = FACTIONS.find((f) => f.value === g.player2_faction)?.label;
                 const needsMyConfirmation =
                   g.status === "pending" &&
                   g.reported_by !== currentUserId &&
@@ -312,6 +314,11 @@ function CompetitionDetail() {
                       </div>
                       <GameStatusBadge status={g.status} isDraw={g.is_draw} />
                     </div>
+                    {(p1Faction || p2Faction) && (
+                      <div className="text-xs text-muted-foreground">
+                        {p1Faction ?? "—"} vs {p2Faction ?? "—"}
+                      </div>
+                    )}
                     {(g.player1_squad_text || g.player2_squad_text) && (
                       <details className="text-xs text-muted-foreground">
                         <summary className="cursor-pointer">Squads</summary>
@@ -380,6 +387,8 @@ function LogGameDialog({
   const [oppSquad, setOppSquad] = useState("");
   const [myPoints, setMyPoints] = useState(0);
   const [oppPoints, setOppPoints] = useState(0);
+  const [myFaction, setMyFaction] = useState<string>("");
+  const [oppFaction, setOppFaction] = useState<string>("");
   const fn = useServerFn(logGame);
   const m = useMutation({
     mutationFn: fn,
@@ -387,6 +396,7 @@ function LogGameDialog({
       toast.success("Game logged — waiting for opponent confirmation");
       setOpen(false);
       setOpponent(""); setMySquad(""); setOppSquad(""); setMyPoints(0); setOppPoints(0);
+      setMyFaction(""); setOppFaction("");
       onLogged();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -421,6 +431,30 @@ function LogGameDialog({
               <Input type="number" min={0} value={oppPoints} onChange={(e) => setOppPoints(parseInt(e.target.value) || 0)} />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Your faction</Label>
+              <Select value={myFaction} onValueChange={setMyFaction}>
+                <SelectTrigger><SelectValue placeholder="Pick faction" /></SelectTrigger>
+                <SelectContent>
+                  {FACTIONS.map((f) => (
+                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Opponent faction</Label>
+              <Select value={oppFaction} onValueChange={setOppFaction}>
+                <SelectTrigger><SelectValue placeholder="Pick faction" /></SelectTrigger>
+                <SelectContent>
+                  {FACTIONS.map((f) => (
+                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="space-y-2">
             <Label>Your squad</Label>
             <Textarea rows={4} value={mySquad} onChange={(e) => setMySquad(e.target.value)} placeholder="Paste or describe your squad" />
@@ -432,7 +466,7 @@ function LogGameDialog({
         </div>
         <DialogFooter>
           <Button
-            disabled={!opponent || m.isPending}
+            disabled={!opponent || !myFaction || !oppFaction || m.isPending}
             onClick={() =>
               m.mutate({
                 data: {
@@ -442,6 +476,8 @@ function LogGameDialog({
                   opponent_squad: oppSquad,
                   my_points: myPoints,
                   opponent_points: oppPoints,
+                  my_faction: myFaction as "imperial" | "rebel" | "scum",
+                  opponent_faction: oppFaction as "imperial" | "rebel" | "scum",
                 },
               })
             }

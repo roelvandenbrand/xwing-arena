@@ -99,10 +99,12 @@ export type Database = {
           created_at: string
           id: string
           is_draw: boolean
+          player1_faction: Database["public"]["Enums"]["xwing_faction"] | null
           player1_id: string
           player1_points: number
           player1_squad_ref: string | null
           player1_squad_text: string
+          player2_faction: Database["public"]["Enums"]["xwing_faction"] | null
           player2_id: string
           player2_points: number
           player2_squad_ref: string | null
@@ -118,10 +120,12 @@ export type Database = {
           created_at?: string
           id?: string
           is_draw?: boolean
+          player1_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player1_id: string
           player1_points: number
           player1_squad_ref?: string | null
           player1_squad_text?: string
+          player2_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player2_id: string
           player2_points: number
           player2_squad_ref?: string | null
@@ -137,10 +141,12 @@ export type Database = {
           created_at?: string
           id?: string
           is_draw?: boolean
+          player1_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player1_id?: string
           player1_points?: number
           player1_squad_ref?: string | null
           player1_squad_text?: string
+          player2_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player2_id?: string
           player2_points?: number
           player2_squad_ref?: string | null
@@ -221,6 +227,7 @@ export type Database = {
       game_status: "pending" | "confirmed" | "rejected"
       member_status: "pending" | "approved" | "rejected"
       rules_version: "1.0" | "2.0" | "2.5"
+      xwing_faction: "imperial" | "rebel" | "scum"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -353,6 +360,7 @@ export const Constants = {
       game_status: ["pending", "confirmed", "rejected"],
       member_status: ["pending", "approved", "rejected"],
       rules_version: ["1.0", "2.0", "2.5"],
+      xwing_faction: ["imperial", "rebel", "scum"],
     },
   },
 } as const
