@@ -2,6 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export const FACTIONS = [
+  { value: "imperial", label: "Galactic Empire" },
+  { value: "rebel", label: "Rebel Alliance" },
+  { value: "scum", label: "Scum and Villainy" },
+] as const;
+
 const logInput = z.object({
   competition_id: z.string().uuid(),
   opponent_id: z.string().uuid(),
@@ -9,6 +15,8 @@ const logInput = z.object({
   opponent_squad: z.string().max(5000).default(""),
   my_points: z.number().int().min(0).max(10000),
   opponent_points: z.number().int().min(0).max(10000),
+  my_faction: z.enum(["imperial", "rebel", "scum"]),
+  opponent_faction: z.enum(["imperial", "rebel", "scum"]),
 });
 
 export const logGame = createServerFn({ method: "POST" })
@@ -25,6 +33,8 @@ export const logGame = createServerFn({ method: "POST" })
       player2_squad_text: data.opponent_squad,
       player1_points: data.my_points,
       player2_points: data.opponent_points,
+      player1_faction: data.my_faction,
+      player2_faction: data.opponent_faction,
       reported_by: userId,
       status: "pending",
     });
