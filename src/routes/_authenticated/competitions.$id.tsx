@@ -11,6 +11,7 @@ import {
   adminJoinCompetition,
 } from "@/lib/competitions.functions";
 import { logGame, decideGame, deleteGame, FACTIONS } from "@/lib/games.functions";
+import { listMySquads } from "@/lib/squads.functions";
 import { computeStandings } from "@/lib/standings";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -389,14 +390,17 @@ function LogGameDialog({
   const [oppPoints, setOppPoints] = useState(0);
   const [myFaction, setMyFaction] = useState<string>("");
   const [oppFaction, setOppFaction] = useState<string>("");
+  const [mySquadId, setMySquadId] = useState<string>("");
   const fn = useServerFn(logGame);
+  const squadsFn = useServerFn(listMySquads);
+  const { data: squadsData } = useQuery({ queryKey: ["my-squads"], queryFn: () => squadsFn() });
   const m = useMutation({
     mutationFn: fn,
     onSuccess: () => {
       toast.success("Game logged — waiting for opponent confirmation");
       setOpen(false);
       setOpponent(""); setMySquad(""); setOppSquad(""); setMyPoints(0); setOppPoints(0);
-      setMyFaction(""); setOppFaction("");
+      setMyFaction(""); setOppFaction(""); setMySquadId("");
       onLogged();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -457,6 +461,17 @@ function LogGameDialog({
           </div>
           <div className="space-y-2">
             <Label>Your squad</Label>
+            {squadsData && squadsData.squads.length > 0 && (
+              <Select value={mySquadId || "__none"} onValueChange={(v) => setMySquadId(v === "__none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Pick a saved squad (optional)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none">— None —</SelectItem>
+                  {squadsData.squads.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Textarea rows={4} value={mySquad} onChange={(e) => setMySquad(e.target.value)} placeholder="Paste or describe your squad" />
           </div>
           <div className="space-y-2">
@@ -478,6 +493,7 @@ function LogGameDialog({
                   opponent_points: oppPoints,
                   my_faction: myFaction as "imperial" | "rebel" | "scum",
                   opponent_faction: oppFaction as "imperial" | "rebel" | "scum",
+                  my_squad_id: mySquadId || null,
                 },
               })
             }

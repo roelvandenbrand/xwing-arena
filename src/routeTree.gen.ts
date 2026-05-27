@@ -15,8 +15,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedSquadsIndexRouteImport } from './routes/_authenticated/squads.index'
 import { Route as AuthenticatedCompetitionsIndexRouteImport } from './routes/_authenticated/competitions.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedSquadsIdRouteImport } from './routes/_authenticated/squads.$id'
 import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authenticated/competitions.$id'
+import { Route as AuthenticatedAdminCatalogRouteImport } from './routes/_authenticated/admin.catalog'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -47,36 +51,65 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSquadsIndexRoute =
+  AuthenticatedSquadsIndexRouteImport.update({
+    id: '/squads/',
+    path: '/squads/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCompetitionsIndexRoute =
   AuthenticatedCompetitionsIndexRouteImport.update({
     id: '/competitions/',
     path: '/competitions/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedSquadsIdRoute = AuthenticatedSquadsIdRouteImport.update({
+  id: '/squads/$id',
+  path: '/squads/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCompetitionsIdRoute =
   AuthenticatedCompetitionsIdRouteImport.update({
     id: '/competitions/$id',
     path: '/competitions/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminCatalogRoute =
+  AuthenticatedAdminCatalogRouteImport.update({
+    id: '/catalog',
+    path: '/catalog',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/browse': typeof AuthenticatedBrowseRoute
+  '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/squads/$id': typeof AuthenticatedSquadsIdRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/competitions/': typeof AuthenticatedCompetitionsIndexRoute
+  '/squads/': typeof AuthenticatedSquadsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/browse': typeof AuthenticatedBrowseRoute
+  '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/squads/$id': typeof AuthenticatedSquadsIdRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/competitions': typeof AuthenticatedCompetitionsIndexRoute
+  '/squads': typeof AuthenticatedSquadsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,10 +117,14 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
+  '/_authenticated/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/_authenticated/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/_authenticated/squads/$id': typeof AuthenticatedSquadsIdRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/competitions/': typeof AuthenticatedCompetitionsIndexRoute
+  '/_authenticated/squads/': typeof AuthenticatedSquadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,17 +134,24 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/browse'
+    | '/admin/catalog'
     | '/competitions/$id'
+    | '/squads/$id'
+    | '/admin/'
     | '/competitions/'
+    | '/squads/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/register'
-    | '/admin'
     | '/browse'
+    | '/admin/catalog'
     | '/competitions/$id'
+    | '/squads/$id'
+    | '/admin'
     | '/competitions'
+    | '/squads'
   id:
     | '__root__'
     | '/'
@@ -116,8 +160,12 @@ export interface FileRouteTypes {
     | '/register'
     | '/_authenticated/admin'
     | '/_authenticated/browse'
+    | '/_authenticated/admin/catalog'
     | '/_authenticated/competitions/$id'
+    | '/_authenticated/squads/$id'
+    | '/_authenticated/admin/'
     | '/_authenticated/competitions/'
+    | '/_authenticated/squads/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,11 +219,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/squads/': {
+      id: '/_authenticated/squads/'
+      path: '/squads'
+      fullPath: '/squads/'
+      preLoaderRoute: typeof AuthenticatedSquadsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/competitions/': {
       id: '/_authenticated/competitions/'
       path: '/competitions'
       fullPath: '/competitions/'
       preLoaderRoute: typeof AuthenticatedCompetitionsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/squads/$id': {
+      id: '/_authenticated/squads/$id'
+      path: '/squads/$id'
+      fullPath: '/squads/$id'
+      preLoaderRoute: typeof AuthenticatedSquadsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/competitions/$id': {
@@ -185,21 +254,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCompetitionsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/catalog': {
+      id: '/_authenticated/admin/catalog'
+      path: '/catalog'
+      fullPath: '/admin/catalog'
+      preLoaderRoute: typeof AuthenticatedAdminCatalogRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCatalogRoute: typeof AuthenticatedAdminCatalogRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCatalogRoute: AuthenticatedAdminCatalogRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCompetitionsIdRoute: typeof AuthenticatedCompetitionsIdRoute
+  AuthenticatedSquadsIdRoute: typeof AuthenticatedSquadsIdRoute
   AuthenticatedCompetitionsIndexRoute: typeof AuthenticatedCompetitionsIndexRoute
+  AuthenticatedSquadsIndexRoute: typeof AuthenticatedSquadsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCompetitionsIdRoute: AuthenticatedCompetitionsIdRoute,
+  AuthenticatedSquadsIdRoute: AuthenticatedSquadsIdRoute,
   AuthenticatedCompetitionsIndexRoute: AuthenticatedCompetitionsIndexRoute,
+  AuthenticatedSquadsIndexRoute: AuthenticatedSquadsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -215,13 +308,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

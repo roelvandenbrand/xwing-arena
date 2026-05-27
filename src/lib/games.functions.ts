@@ -17,6 +17,8 @@ const logInput = z.object({
   opponent_points: z.number().int().min(0).max(10000),
   my_faction: z.enum(["imperial", "rebel", "scum"]),
   opponent_faction: z.enum(["imperial", "rebel", "scum"]),
+  my_squad_id: z.string().uuid().nullable().optional(),
+  opponent_squad_id: z.string().uuid().nullable().optional(),
 });
 
 export const logGame = createServerFn({ method: "POST" })
@@ -35,6 +37,8 @@ export const logGame = createServerFn({ method: "POST" })
       player2_points: data.opponent_points,
       player1_faction: data.my_faction,
       player2_faction: data.opponent_faction,
+      player1_squad_id: data.my_squad_id ?? null,
+      player2_squad_id: data.opponent_squad_id ?? null,
       reported_by: userId,
       status: "pending",
     });

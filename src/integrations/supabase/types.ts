@@ -102,11 +102,13 @@ export type Database = {
           player1_faction: Database["public"]["Enums"]["xwing_faction"] | null
           player1_id: string
           player1_points: number
+          player1_squad_id: string | null
           player1_squad_ref: string | null
           player1_squad_text: string
           player2_faction: Database["public"]["Enums"]["xwing_faction"] | null
           player2_id: string
           player2_points: number
+          player2_squad_id: string | null
           player2_squad_ref: string | null
           player2_squad_text: string
           reported_by: string
@@ -123,11 +125,13 @@ export type Database = {
           player1_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player1_id: string
           player1_points: number
+          player1_squad_id?: string | null
           player1_squad_ref?: string | null
           player1_squad_text?: string
           player2_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player2_id: string
           player2_points: number
+          player2_squad_id?: string | null
           player2_squad_ref?: string | null
           player2_squad_text?: string
           reported_by: string
@@ -144,11 +148,13 @@ export type Database = {
           player1_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player1_id?: string
           player1_points?: number
+          player1_squad_id?: string | null
           player1_squad_ref?: string | null
           player1_squad_text?: string
           player2_faction?: Database["public"]["Enums"]["xwing_faction"] | null
           player2_id?: string
           player2_points?: number
+          player2_squad_id?: string | null
           player2_squad_ref?: string | null
           player2_squad_text?: string
           reported_by?: string
@@ -162,6 +168,79 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "competitions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_player1_squad_id_fkey"
+            columns: ["player1_squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "games_player2_squad_id_fkey"
+            columns: ["player2_squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilots: {
+        Row: {
+          created_at: string
+          faction: string
+          id: string
+          image: string | null
+          legacy_id: number | null
+          name: string
+          points: number
+          ship_xws: string
+          skill: number
+          slots: string[]
+          text: string | null
+          unique_pilot: boolean
+          updated_at: string
+          xws: string
+        }
+        Insert: {
+          created_at?: string
+          faction: string
+          id?: string
+          image?: string | null
+          legacy_id?: number | null
+          name: string
+          points?: number
+          ship_xws: string
+          skill?: number
+          slots?: string[]
+          text?: string | null
+          unique_pilot?: boolean
+          updated_at?: string
+          xws: string
+        }
+        Update: {
+          created_at?: string
+          faction?: string
+          id?: string
+          image?: string | null
+          legacy_id?: number | null
+          name?: string
+          points?: number
+          ship_xws?: string
+          skill?: number
+          slots?: string[]
+          text?: string | null
+          unique_pilot?: boolean
+          updated_at?: string
+          xws?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilots_ship_xws_fkey"
+            columns: ["ship_xws"]
+            isOneToOne: false
+            referencedRelation: "ships"
+            referencedColumns: ["xws"]
           },
         ]
       }
@@ -180,6 +259,213 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+        }
+        Relationships: []
+      }
+      ships: {
+        Row: {
+          actions: string[]
+          agility: number | null
+          attack: number | null
+          created_at: string
+          dial: string[]
+          faction: string[]
+          firing_arcs: string[]
+          hull: number | null
+          id: string
+          legacy_id: number | null
+          maneuvers: Json | null
+          name: string
+          shields: number | null
+          size: string | null
+          updated_at: string
+          xws: string
+        }
+        Insert: {
+          actions?: string[]
+          agility?: number | null
+          attack?: number | null
+          created_at?: string
+          dial?: string[]
+          faction?: string[]
+          firing_arcs?: string[]
+          hull?: number | null
+          id?: string
+          legacy_id?: number | null
+          maneuvers?: Json | null
+          name: string
+          shields?: number | null
+          size?: string | null
+          updated_at?: string
+          xws: string
+        }
+        Update: {
+          actions?: string[]
+          agility?: number | null
+          attack?: number | null
+          created_at?: string
+          dial?: string[]
+          faction?: string[]
+          firing_arcs?: string[]
+          hull?: number | null
+          id?: string
+          legacy_id?: number | null
+          maneuvers?: Json | null
+          name?: string
+          shields?: number | null
+          size?: string | null
+          updated_at?: string
+          xws?: string
+        }
+        Relationships: []
+      }
+      squad_pilot_upgrades: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          squad_pilot_id: string
+          upgrade_xws: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          squad_pilot_id: string
+          upgrade_xws: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          squad_pilot_id?: string
+          upgrade_xws?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_pilot_upgrades_squad_pilot_id_fkey"
+            columns: ["squad_pilot_id"]
+            isOneToOne: false
+            referencedRelation: "squad_pilots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "squad_pilot_upgrades_upgrade_xws_fkey"
+            columns: ["upgrade_xws"]
+            isOneToOne: false
+            referencedRelation: "upgrades"
+            referencedColumns: ["xws"]
+          },
+        ]
+      }
+      squad_pilots: {
+        Row: {
+          created_at: string
+          id: string
+          pilot_xws: string
+          position: number
+          squad_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pilot_xws: string
+          position?: number
+          squad_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pilot_xws?: string
+          position?: number
+          squad_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "squad_pilots_pilot_xws_fkey"
+            columns: ["pilot_xws"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["xws"]
+          },
+          {
+            foreignKeyName: "squad_pilots_squad_id_fkey"
+            columns: ["squad_id"]
+            isOneToOne: false
+            referencedRelation: "squads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      squads: {
+        Row: {
+          created_at: string
+          faction: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          faction: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          faction?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      upgrades: {
+        Row: {
+          attack: number | null
+          created_at: string
+          id: string
+          image: string | null
+          legacy_id: number | null
+          name: string
+          points: number
+          range: string | null
+          slot: string
+          text: string | null
+          updated_at: string
+          xws: string
+        }
+        Insert: {
+          attack?: number | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          legacy_id?: number | null
+          name: string
+          points?: number
+          range?: string | null
+          slot: string
+          text?: string | null
+          updated_at?: string
+          xws: string
+        }
+        Update: {
+          attack?: number | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          legacy_id?: number | null
+          name?: string
+          points?: number
+          range?: string | null
+          slot?: string
+          text?: string | null
+          updated_at?: string
+          xws?: string
         }
         Relationships: []
       }
