@@ -131,7 +131,7 @@ export const updateSquad = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    const patch: { name?: string; faction?: string } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.faction !== undefined) patch.faction = data.faction;
     const { error } = await context.supabase
