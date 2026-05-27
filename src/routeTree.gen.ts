@@ -18,6 +18,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSquadsIndexRouteImport } from './routes/_authenticated/squads.index'
 import { Route as AuthenticatedCompetitionsIndexRouteImport } from './routes/_authenticated/competitions.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedSquadsIdRouteImport } from './routes/_authenticated/squads.$id'
 import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authenticated/competitions.$id'
 import { Route as AuthenticatedAdminCatalogRouteImport } from './routes/_authenticated/admin.catalog'
 
@@ -67,6 +68,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedSquadsIdRoute = AuthenticatedSquadsIdRouteImport.update({
+  id: '/squads/$id',
+  path: '/squads/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCompetitionsIdRoute =
   AuthenticatedCompetitionsIdRouteImport.update({
     id: '/competitions/$id',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof AuthenticatedBrowseRoute
   '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/squads/$id': typeof AuthenticatedSquadsIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/competitions/': typeof AuthenticatedCompetitionsIndexRoute
   '/squads/': typeof AuthenticatedSquadsIndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/browse': typeof AuthenticatedBrowseRoute
   '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/squads/$id': typeof AuthenticatedSquadsIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/competitions': typeof AuthenticatedCompetitionsIndexRoute
   '/squads': typeof AuthenticatedSquadsIndexRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/_authenticated/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/_authenticated/squads/$id': typeof AuthenticatedSquadsIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/competitions/': typeof AuthenticatedCompetitionsIndexRoute
   '/_authenticated/squads/': typeof AuthenticatedSquadsIndexRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/admin/catalog'
     | '/competitions/$id'
+    | '/squads/$id'
     | '/admin/'
     | '/competitions/'
     | '/squads/'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/admin/catalog'
     | '/competitions/$id'
+    | '/squads/$id'
     | '/admin'
     | '/competitions'
     | '/squads'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/browse'
     | '/_authenticated/admin/catalog'
     | '/_authenticated/competitions/$id'
+    | '/_authenticated/squads/$id'
     | '/_authenticated/admin/'
     | '/_authenticated/competitions/'
     | '/_authenticated/squads/'
@@ -228,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/squads/$id': {
+      id: '/_authenticated/squads/$id'
+      path: '/squads/$id'
+      fullPath: '/squads/$id'
+      preLoaderRoute: typeof AuthenticatedSquadsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/competitions/$id': {
       id: '/_authenticated/competitions/$id'
       path: '/competitions/$id'
@@ -262,6 +281,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCompetitionsIdRoute: typeof AuthenticatedCompetitionsIdRoute
+  AuthenticatedSquadsIdRoute: typeof AuthenticatedSquadsIdRoute
   AuthenticatedCompetitionsIndexRoute: typeof AuthenticatedCompetitionsIndexRoute
   AuthenticatedSquadsIndexRoute: typeof AuthenticatedSquadsIndexRoute
 }
@@ -270,6 +290,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCompetitionsIdRoute: AuthenticatedCompetitionsIdRoute,
+  AuthenticatedSquadsIdRoute: AuthenticatedSquadsIdRoute,
   AuthenticatedCompetitionsIndexRoute: AuthenticatedCompetitionsIndexRoute,
   AuthenticatedSquadsIndexRoute: AuthenticatedSquadsIndexRoute,
 }
