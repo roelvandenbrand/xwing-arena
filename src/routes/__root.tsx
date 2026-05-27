@@ -141,6 +141,9 @@ function AppShell() {
               <Link to="/competitions" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
                 My Competitions
               </Link>
+              <Link to="/squads" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
+                Squads
+              </Link>
               <Link to="/browse" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
                 Browse
               </Link>
