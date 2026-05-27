@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCompetitionsIndexRouteImport } from './routes/_authenticated/competitions.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authenticated/competitions.$id'
@@ -42,6 +43,11 @@ const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCompetitionsIndexRoute =
   AuthenticatedCompetitionsIndexRouteImport.update({
     id: '/competitions/',
@@ -49,9 +55,9 @@ const AuthenticatedCompetitionsIndexRoute =
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedCompetitionsIdRoute =
   AuthenticatedCompetitionsIdRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/browse': typeof AuthenticatedBrowseRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -84,6 +91,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -95,6 +103,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
+    | '/admin'
     | '/browse'
     | '/competitions/$id'
     | '/admin/'
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/register'
+    | '/_authenticated/admin'
     | '/_authenticated/browse'
     | '/_authenticated/competitions/$id'
     | '/_authenticated/admin/'
@@ -164,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrowseRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/competitions/': {
       id: '/_authenticated/competitions/'
       path: '/competitions'
@@ -173,10 +190,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/competitions/$id': {
       id: '/_authenticated/competitions/$id'
@@ -188,17 +205,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCompetitionsIdRoute: typeof AuthenticatedCompetitionsIdRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedCompetitionsIndexRoute: typeof AuthenticatedCompetitionsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCompetitionsIdRoute: AuthenticatedCompetitionsIdRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedCompetitionsIndexRoute: AuthenticatedCompetitionsIndexRoute,
 }
 
