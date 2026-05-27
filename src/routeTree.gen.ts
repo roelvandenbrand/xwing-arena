@@ -18,6 +18,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCompetitionsIndexRouteImport } from './routes/_authenticated/competitions.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authenticated/competitions.$id'
+import { Route as AuthenticatedAdminCatalogRouteImport } from './routes/_authenticated/admin.catalog'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -65,6 +66,12 @@ const AuthenticatedCompetitionsIdRoute =
     path: '/competitions/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminCatalogRoute =
+  AuthenticatedAdminCatalogRouteImport.update({
+    id: '/catalog',
+    path: '/catalog',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/browse': typeof AuthenticatedBrowseRoute
+  '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/competitions/': typeof AuthenticatedCompetitionsIndexRoute
@@ -81,6 +89,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/browse': typeof AuthenticatedBrowseRoute
+  '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/competitions': typeof AuthenticatedCompetitionsIndexRoute
@@ -93,6 +102,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
+  '/_authenticated/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/_authenticated/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/competitions/': typeof AuthenticatedCompetitionsIndexRoute
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/admin'
     | '/browse'
+    | '/admin/catalog'
     | '/competitions/$id'
     | '/admin/'
     | '/competitions/'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/browse'
+    | '/admin/catalog'
     | '/competitions/$id'
     | '/admin'
     | '/competitions'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_authenticated/admin'
     | '/_authenticated/browse'
+    | '/_authenticated/admin/catalog'
     | '/_authenticated/competitions/$id'
     | '/_authenticated/admin/'
     | '/_authenticated/competitions/'
@@ -202,14 +215,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCompetitionsIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/catalog': {
+      id: '/_authenticated/admin/catalog'
+      path: '/catalog'
+      fullPath: '/admin/catalog'
+      preLoaderRoute: typeof AuthenticatedAdminCatalogRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCatalogRoute: typeof AuthenticatedAdminCatalogRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCatalogRoute: AuthenticatedAdminCatalogRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
