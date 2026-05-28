@@ -240,19 +240,27 @@ export const addUpgradeToPilot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
     z
-      .object({ squad_pilot_id: z.string().uuid(), upgrade_xws: z.string().min(1) })
+      .object({
+        squad_pilot_id: z.string().uuid(),
+        upgrade_xws: z.string().min(1),
+        position: z.number().int().min(0).optional(),
+      })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { count } = await supabase
-      .from("squad_pilot_upgrades")
-      .select("id", { count: "exact", head: true })
-      .eq("squad_pilot_id", data.squad_pilot_id);
+    let position = data.position;
+    if (position === undefined) {
+      const { count } = await supabase
+        .from("squad_pilot_upgrades")
+        .select("id", { count: "exact", head: true })
+        .eq("squad_pilot_id", data.squad_pilot_id);
+      position = count ?? 0;
+    }
     const { error } = await supabase.from("squad_pilot_upgrades").insert({
       squad_pilot_id: data.squad_pilot_id,
       upgrade_xws: data.upgrade_xws,
-      position: count ?? 0,
+      position,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
