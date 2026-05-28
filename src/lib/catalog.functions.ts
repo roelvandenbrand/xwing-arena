@@ -24,6 +24,21 @@ const pilotSchema = z.object({
   xws: z.string().min(1),
   name: z.string().min(1),
   faction: z.string().min(1),
+  ship_xws: z.string().min(1),
+  skill: z.number().int().default(0),
+  points: z.number().int().default(0),
+  unique_pilot: z.boolean().default(false),
+  slots: z.array(z.string()).default([]),
+  text: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  legacy_id: z.number().int().nullable().optional(),
+});
+
+// Bulk-import accepts the upstream JSON shape: ship by name, `unique`, numeric `id`.
+const pilotImportSchema = z.object({
+  xws: z.string().min(1),
+  name: z.string().min(1),
+  faction: z.string().min(1),
   ship_xws: z.string().min(1).optional(),
   ship: z.string().min(1).optional(),
   skill: z.number().int().default(0),
@@ -74,7 +89,7 @@ export const importShips = createServerFn({ method: "POST" })
 
 export const importPilots = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ items: z.array(pilotSchema).max(5000) }).parse(d))
+  .inputValidator((d) => z.object({ items: z.array(pilotImportSchema).max(5000) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     // Build ship name -> xws lookup so imports can reference ships by display name.
