@@ -38,7 +38,7 @@ const pilotSchema = z.object({
 const pilotImportSchema = z.object({
   xws: z.string().min(1),
   name: z.string().min(1),
-  faction: z.string().min(1),
+  faction: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
   ship_xws: z.string().min(1).optional(),
   ship: z.string().min(1).optional(),
   skill: z.number().int().default(0),
@@ -120,7 +120,7 @@ export const importPilots = createServerFn({ method: "POST" })
       return {
         xws: p.xws,
         name: p.name,
-        faction: p.faction,
+        faction: Array.isArray(p.faction) ? p.faction[0] : p.faction,
         ship_xws,
         skill: p.skill,
         points: p.points,
@@ -144,11 +144,15 @@ export const importUpgrades = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ items: z.array(upgradeSchema).max(5000) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    // Dedupe by xws — upstream JSON often lists the same upgrade once per slot variant.
+    const byXws = new Map<string, (typeof data.items)[number]>();
+    for (const u of data.items) byXws.set(u.xws, u);
+    const deduped = Array.from(byXws.values());
     const { error } = await context.supabase
       .from("upgrades")
-      .upsert(data.items, { onConflict: "xws" });
+      .upsert(deduped, { onConflict: "xws" });
     if (error) throw new Error(error.message);
-    return { ok: true, count: data.items.length };
+    return { ok: true, count: deduped.length };
   });
 
 // ---------- List ----------
