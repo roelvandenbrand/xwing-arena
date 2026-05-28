@@ -132,11 +132,14 @@ export const importPilots = createServerFn({ method: "POST" })
       };
     });
 
+    const byXwsPilot = new Map<string, (typeof normalized)[number]>();
+    for (const p of normalized) byXwsPilot.set(p.xws, p);
+    const dedupedPilots = Array.from(byXwsPilot.values());
     const { error } = await context.supabase
       .from("pilots")
-      .upsert(normalized, { onConflict: "xws" });
+      .upsert(dedupedPilots, { onConflict: "xws" });
     if (error) throw new Error(error.message);
-    return { ok: true, count: normalized.length };
+    return { ok: true, count: dedupedPilots.length };
   });
 
 export const importUpgrades = createServerFn({ method: "POST" })
