@@ -24,14 +24,17 @@ const pilotSchema = z.object({
   xws: z.string().min(1),
   name: z.string().min(1),
   faction: z.string().min(1),
-  ship_xws: z.string().min(1),
+  ship_xws: z.string().min(1).optional(),
+  ship: z.string().min(1).optional(),
   skill: z.number().int().default(0),
   points: z.number().int().default(0),
-  unique_pilot: z.boolean().default(false),
+  unique_pilot: z.boolean().optional(),
+  unique: z.boolean().optional(),
   slots: z.array(z.string()).default([]),
   text: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
   legacy_id: z.number().int().nullable().optional(),
+  id: z.number().int().nullable().optional(),
 });
 
 const upgradeSchema = z.object({
@@ -74,11 +77,51 @@ export const importPilots = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ items: z.array(pilotSchema).max(5000) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    // Build ship name -> xws lookup so imports can reference ships by display name.
+    const { data: ships, error: shipsErr } = await context.supabase
+      .from("ships")
+      .select("xws,name");
+    if (shipsErr) throw new Error(shipsErr.message);
+    const byName = new Map<string, string>();
+    const byXws = new Set<string>();
+    for (const s of ships ?? []) {
+      byName.set(s.name.toLowerCase(), s.xws);
+      byXws.add(s.xws);
+    }
+
+    const normalized = data.items.map((p) => {
+      const rawShip = p.ship_xws ?? p.ship ?? "";
+      let ship_xws = rawShip;
+      if (ship_xws && !byXws.has(ship_xws)) {
+        const mapped = byName.get(ship_xws.toLowerCase());
+        if (mapped) ship_xws = mapped;
+      }
+      if (!ship_xws) {
+        throw new Error(`Pilot "${p.name}" is missing a ship reference`);
+      }
+      if (!byXws.has(ship_xws) && !byName.has(rawShip.toLowerCase())) {
+        throw new Error(`Ship "${rawShip}" not found for pilot "${p.name}". Import ships first.`);
+      }
+      return {
+        xws: p.xws,
+        name: p.name,
+        faction: p.faction,
+        ship_xws,
+        skill: p.skill,
+        points: p.points,
+        unique_pilot: p.unique_pilot ?? p.unique ?? false,
+        slots: p.slots,
+        text: p.text ?? null,
+        image: p.image ?? null,
+        legacy_id: p.legacy_id ?? p.id ?? null,
+      };
+    });
+
     const { error } = await context.supabase
       .from("pilots")
-      .upsert(data.items, { onConflict: "xws" });
+      .upsert(normalized, { onConflict: "xws" });
     if (error) throw new Error(error.message);
-    return { ok: true, count: data.items.length };
+    return { ok: true, count: normalized.length };
   });
 
 export const importUpgrades = createServerFn({ method: "POST" })
