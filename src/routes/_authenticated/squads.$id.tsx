@@ -10,7 +10,7 @@ import {
   addUpgradeToPilot,
   removeUpgradeFromPilot,
 } from "@/lib/squads.functions";
-import { listPilots, listUpgrades } from "@/lib/catalog.functions";
+import { listPilots, listUpgrades, listShips } from "@/lib/catalog.functions";
 import { FACTIONS } from "@/lib/games.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
