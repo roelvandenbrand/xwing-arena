@@ -38,7 +38,7 @@ const pilotSchema = z.object({
 const pilotImportSchema = z.object({
   xws: z.string().min(1),
   name: z.string().min(1),
-  faction: z.string().min(1),
+  faction: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
   ship_xws: z.string().min(1).optional(),
   ship: z.string().min(1).optional(),
   skill: z.number().int().default(0),
@@ -120,7 +120,7 @@ export const importPilots = createServerFn({ method: "POST" })
       return {
         xws: p.xws,
         name: p.name,
-        faction: p.faction,
+        faction: Array.isArray(p.faction) ? p.faction[0] : p.faction,
         ship_xws,
         skill: p.skill,
         points: p.points,
