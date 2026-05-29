@@ -182,6 +182,7 @@ function ShipsList() {
           <DialogHeader><DialogTitle>Edit ship</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
+              <XwsDisplay xws={editing.xws} hint="Name your image file: " ext="png" />
               <Field label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
               <Field label="Size" value={editing.size ?? ""} onChange={(v) => setEditing({ ...editing, size: v })} />
               <NumField label="Attack" value={editing.attack} onChange={(v) => setEditing({ ...editing, attack: v })} />
@@ -253,6 +254,7 @@ function PilotsList() {
           <DialogHeader><DialogTitle>Edit pilot</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
+              <XwsDisplay xws={editing.xws} hint="Name your image file: " ext="png" />
               <Field label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
               <Field label="Faction" value={editing.faction} onChange={(v) => setEditing({ ...editing, faction: v })} />
               <Field label="Ship xws" value={editing.ship_xws} onChange={(v) => setEditing({ ...editing, ship_xws: v })} />
@@ -329,6 +331,7 @@ function UpgradesList() {
           <DialogHeader><DialogTitle>Edit upgrade</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
+              <XwsDisplay xws={editing.xws} hint="Name your image file: " ext="png" />
               <Field label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
               <Field label="Slot" value={editing.slot} onChange={(v) => setEditing({ ...editing, slot: v })} />
               <NumField label="Points" value={editing.points} onChange={(v) => setEditing({ ...editing, points: v })} />
@@ -375,6 +378,21 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
     <div className="space-y-1">
       <Label>{label}</Label>
       <Input value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function XwsDisplay({ xws, hint, ext }: { xws: string; hint?: string; ext?: string }) {
+  const filename = ext ? `${xws}.${ext}` : xws;
+  return (
+    <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs">
+      <div className="text-muted-foreground">xws id</div>
+      <code className="text-sm font-mono">{xws}</code>
+      {hint && (
+        <div className="mt-1 text-muted-foreground">
+          {hint}<code className="font-mono">{filename}</code>
+        </div>
+      )}
     </div>
   );
 }
