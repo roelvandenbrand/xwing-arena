@@ -381,9 +381,9 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
 
 function ImageUploader({ kind }: { kind: "pilots" | "upgrades" }) {
   const qc = useQueryClient();
-  const listFn = useServerFn(kind === "pilots" ? listPilots : listUpgrades);
-  const updateFn = useServerFn(kind === "pilots" ? updatePilot : updateUpgrade);
-  const { data } = useQuery({
+  const listFn = useServerFn(kind === "pilots" ? listPilots : listUpgrades) as any;
+  const updateFn = useServerFn(kind === "pilots" ? updatePilot : updateUpgrade) as any;
+  const { data } = useQuery<any>({
     queryKey: [kind],
     queryFn: () => listFn(),
   });
