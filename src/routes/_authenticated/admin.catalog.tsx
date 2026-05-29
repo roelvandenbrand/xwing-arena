@@ -382,6 +382,21 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   );
 }
 
+function XwsDisplay({ xws, hint, ext }: { xws: string; hint?: string; ext?: string }) {
+  const filename = ext ? `${xws}.${ext}` : xws;
+  return (
+    <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs">
+      <div className="text-muted-foreground">xws id</div>
+      <code className="text-sm font-mono">{xws}</code>
+      {hint && (
+        <div className="mt-1 text-muted-foreground">
+          {hint}<code className="font-mono">{filename}</code>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ImageUploader({ kind }: { kind: "pilots" | "upgrades" }) {
   const qc = useQueryClient();
   const listFn = useServerFn(kind === "pilots" ? listPilots : listUpgrades) as any;
