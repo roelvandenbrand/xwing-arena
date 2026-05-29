@@ -14,6 +14,7 @@ import {
   updateUpgrade,
 } from "@/lib/catalog.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,10 +54,12 @@ function CatalogPage() {
         </TabsContent>
         <TabsContent value="pilots" className="space-y-6">
           <ImportCard label="pilots" />
+          <ImageUploader kind="pilots" />
           <PilotsList />
         </TabsContent>
         <TabsContent value="upgrades" className="space-y-6">
           <ImportCard label="upgrades" />
+          <ImageUploader kind="upgrades" />
           <UpgradesList />
         </TabsContent>
       </Tabs>
