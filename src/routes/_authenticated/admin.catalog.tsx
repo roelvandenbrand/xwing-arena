@@ -379,6 +379,102 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   );
 }
 
+function ImageUploader({ kind }: { kind: "pilots" | "upgrades" }) {
+  const qc = useQueryClient();
+  const listFn = useServerFn(kind === "pilots" ? listPilots : listUpgrades);
+  const updateFn = useServerFn(kind === "pilots" ? updatePilot : updateUpgrade);
+  const { data } = useQuery({
+    queryKey: [kind],
+    queryFn: () => listFn(),
+  });
+  const items: any[] =
+    (kind === "pilots" ? (data as any)?.pilots : (data as any)?.upgrades) ?? [];
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
+
+  const xwsByKey = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const it of items) m.set(it.xws.toLowerCase(), it.xws);
+    return m;
+  }, [items]);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setBusy(true);
+    setProgress({ done: 0, total: files.length });
+    let ok = 0;
+    const missing: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const base = f.name.replace(/\.[^.]+$/, "");
+      const xws = xwsByKey.get(base.toLowerCase());
+      if (!xws) {
+        missing.push(f.name);
+        setProgress({ done: i + 1, total: files.length });
+        continue;
+      }
+      const ext = (f.name.split(".").pop() || "png").toLowerCase();
+      const path = `${kind}/${xws}.${ext}`;
+      const up = await supabase.storage
+        .from("catalog-images")
+        .upload(path, f, { upsert: true, contentType: f.type || "image/png" });
+      if (up.error) {
+        toast.error(`${f.name}: ${up.error.message}`);
+        setProgress({ done: i + 1, total: files.length });
+        continue;
+      }
+      const { data: pub } = supabase.storage.from("catalog-images").getPublicUrl(path);
+      const url = `${pub.publicUrl}?v=${Date.now()}`;
+      try {
+        await updateFn({ data: { xws, patch: { image: url } as any } });
+        ok++;
+      } catch (e) {
+        toast.error(`${f.name}: ${(e as Error).message}`);
+      }
+      setProgress({ done: i + 1, total: files.length });
+    }
+    setBusy(false);
+    qc.invalidateQueries({ queryKey: [kind] });
+    toast.success(`Uploaded ${ok}/${files.length} images`);
+    if (missing.length) {
+      toast.warning(
+        `No match for ${missing.length} file(s): ${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}`,
+      );
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Upload {kind} images</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Select PNGs (or JPGs). The filename (without extension) must match the{" "}
+          <code>xws</code> id, e.g. <code>lukeskywalker.png</code>. Existing images are
+          overwritten and the <code>image</code> column is updated automatically.
+        </p>
+        <input
+          type="file"
+          multiple
+          accept="image/png,image/jpeg,image/webp"
+          disabled={busy}
+          onChange={(e) => {
+            handleFiles(e.target.files);
+            e.target.value = "";
+          }}
+          className="text-sm"
+        />
+        {busy && (
+          <p className="text-xs text-muted-foreground">
+            Uploading {progress.done}/{progress.total}…
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function NumField({ label, value, onChange }: { label: string; value: number | null | undefined; onChange: (v: number | null) => void }) {
   return (
     <div className="space-y-1">
