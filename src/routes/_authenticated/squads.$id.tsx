@@ -22,7 +22,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { toast } from "sonner";
+
+// Pilots store factions by full label; squads store a short code.
+// Some factions can mix together when building a squad.
+const FACTION_GROUPS: Record<string, string[]> = {
+  imperial: ["Galactic Empire", "First Order"],
+  rebel: ["Rebel Alliance", "Resistance"],
+  scum: ["Scum and Villainy"],
+};
 
 export const Route = createFileRoute("/_authenticated/squads/$id")({
   head: () => ({ meta: [{ title: "Squad — X-Wing League" }] }),
