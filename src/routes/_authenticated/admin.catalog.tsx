@@ -300,6 +300,8 @@ function PilotsList() {
 
 function UpgradesList() {
   const fn = useServerFn(listUpgrades);
+  const shipsFn = useServerFn(listShips);
+  const { data: shipsData } = useQuery({ queryKey: ["ships"], queryFn: () => shipsFn() });
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["upgrades"], queryFn: () => fn() });
   const { q, setQ, filtered } = useSearchFilter(data?.upgrades ?? []);
@@ -338,6 +340,62 @@ function UpgradesList() {
               <NumField label="Attack" value={editing.attack ?? 0} onChange={(v) => setEditing({ ...editing, attack: v })} />
               <Field label="Range" value={editing.range ?? ""} onChange={(v) => setEditing({ ...editing, range: v })} />
               <div className="space-y-1">
+                <Label>Faction restriction</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editing.faction ?? ""}
+                  onChange={(e) => setEditing({ ...editing, faction: e.target.value || null })}
+                >
+                  <option value="">Any faction</option>
+                  <option value="Galactic Empire">Galactic Empire</option>
+                  <option value="First Order">First Order</option>
+                  <option value="Rebel Alliance">Rebel Alliance</option>
+                  <option value="Resistance">Resistance</option>
+                  <option value="Scum and Villainy">Scum and Villainy</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label>Ship restriction</Label>
+                <select
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={editing.ship_xws ?? ""}
+                  onChange={(e) => setEditing({ ...editing, ship_xws: e.target.value || null })}
+                >
+                  <option value="">Any ship</option>
+                  {(shipsData?.ships ?? []).map((s: any) => (
+                    <option key={s.xws} value={s.xws}>{s.name} ({s.xws})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label>Grants extra slots</Label>
+                <div className="grid grid-cols-3 gap-1 rounded-md border p-2 text-xs">
+                  {[
+                    "Astromech","Cannon","Crew","Device","Force Power","Gunner",
+                    "Hardpoint","Illicit","Missile","Modification","Sensor",
+                    "Talent","Tech","Title","Torpedo","Turret","Configuration",
+                  ].map((slot) => {
+                    const grants: string[] = editing.grants ?? [];
+                    const checked = grants.includes(slot);
+                    return (
+                      <label key={slot} className="flex items-center gap-1">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...grants, slot]
+                              : grants.filter((s) => s !== slot);
+                            setEditing({ ...editing, grants: next });
+                          }}
+                        />
+                        {slot}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-1">
                 <Label>Card text (HTML allowed)</Label>
                 <Textarea rows={4} value={editing.text ?? ""} onChange={(e) => setEditing({ ...editing, text: e.target.value })} />
               </div>
@@ -360,6 +418,9 @@ function UpgradesList() {
                       range: editing.range || null,
                       text: editing.text,
                       image: editing.image,
+                      faction: editing.faction ?? null,
+                      ship_xws: editing.ship_xws ?? null,
+                      grants: editing.grants ?? [],
                     },
                   },
                 });
