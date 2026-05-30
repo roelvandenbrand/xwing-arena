@@ -175,103 +175,151 @@ function SquadDetail() {
             0,
           );
           const pPts = pilot?.points ?? 0;
-          const slots: string[] = pilot?.slots ?? [];
+          const baseSlots: string[] = pilot?.slots ?? [];
+          // Append slots granted by equipped upgrades (in equip order).
+          const grantedSlots: string[] = [];
+          for (const u of myUps) {
+            const upg: any = upgradeByXws.get(u.upgrade_xws);
+            if (upg?.grants?.length) grantedSlots.push(...upg.grants);
+          }
+          const slots: string[] = [...baseSlots, ...grantedSlots];
+          // Split slots into 2 visual rows.
+          const rowSize = Math.ceil(slots.length / 2) || 1;
           return (
             <Card key={sp.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex gap-3">
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* Big pilot card image */}
+                  <div className="shrink-0 flex flex-col items-start gap-2">
                     <CatalogImage
                       src={pilot?.image}
                       alt={pilot?.name ?? sp.pilot_xws}
-                      className="h-24 w-auto rounded border object-cover"
+                      className="h-72 w-auto rounded border object-contain bg-muted/30"
                     />
-                    <div>
+                    <div className="w-full">
                       <CardTitle className="text-lg">{pilot?.name ?? sp.pilot_xws}</CardTitle>
                       <p className="text-xs text-muted-foreground mt-1">
                         {pilot?.ship_xws} · skill {pilot?.skill ?? "?"} · {pPts}pt
-                        {upPts > 0 && ` + ${upPts}pt upgrades = ${pPts + upPts}pt`}
+                        {upPts > 0 && ` + ${upPts} = ${pPts + upPts}pt`}
                       </p>
+                      {isOwner && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-1 px-0 h-7"
+                          onClick={() => {
+                            if (confirm(`Remove ${pilot?.name ?? "pilot"}?`))
+                              rmPilotMut.mutate({ data: { squad_pilot_id: sp.id } });
+                          }}
+                        >Remove pilot</Button>
+                      )}
                     </div>
                   </div>
-                  {isOwner && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        if (confirm(`Remove ${pilot?.name ?? "pilot"}?`))
-                          rmPilotMut.mutate({ data: { squad_pilot_id: sp.id } });
-                      }}
-                    >Remove</Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {slots.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No upgrade slots.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {slots.map((slot, slotIndex) => {
-                      const filled = myUps.find((u: any) => u.position === slotIndex);
-                      const upg: any = filled ? upgradeByXws.get(filled.upgrade_xws) : null;
-                      return (
-                        <li
-                          key={slotIndex}
-                          className="flex items-center justify-between gap-2 rounded border p-2 text-sm"
-                        >
-                          {filled && upg ? (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <CatalogImage
-                                  src={upg.image}
-                                  alt={upg.name}
-                                  className="h-12 w-auto rounded object-cover"
-                                />
-                                <div>
-                                  <div className="font-medium">{upg.name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {slot} · {upg.points ?? 0}pt
-                                  </div>
-                                </div>
-                              </div>
-                              {isOwner && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => rmUpMut.mutate({ data: { id: filled.id } })}
-                                >Remove</Button>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-muted-foreground text-xs">
-                                Empty {slot} slot
-                              </span>
-                              {isOwner && (
-                                <AddUpgradeForSlotDialog
-                                  slot={slot}
-                                  upgrades={(upgradesData?.upgrades ?? []).filter(
-                                    (u: any) => u.slot === slot,
+
+                  {/* Slots in two rows next to the pilot */}
+                  <div className="flex-1 min-w-0">
+                    {slots.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No upgrade slots.</p>
+                    ) : (
+                      <div
+                        className="grid gap-2"
+                        style={{
+                          gridTemplateColumns: `repeat(${rowSize}, minmax(160px, 1fr))`,
+                          gridTemplateRows: "repeat(2, auto)",
+                        }}
+                      >
+                        {slots.map((slot, slotIndex) => {
+                          const filled = myUps.find((u: any) => u.position === slotIndex);
+                          const upg: any = filled ? upgradeByXws.get(filled.upgrade_xws) : null;
+                          const isGranted = slotIndex >= baseSlots.length;
+                          return (
+                            <div
+                              key={slotIndex}
+                              className="rounded border p-2 text-sm flex flex-col gap-1 min-h-[7rem]"
+                            >
+                              {filled && upg ? (
+                                <HoverCard openDelay={120}>
+                                  <HoverCardTrigger asChild>
+                                    <div className="flex flex-col gap-1 cursor-help">
+                                      <CatalogImage
+                                        src={upg.image}
+                                        alt={upg.name}
+                                        className="h-24 w-auto rounded object-contain"
+                                      />
+                                      <div className="font-medium text-xs truncate">{upg.name}</div>
+                                      <div className="text-[10px] text-muted-foreground">
+                                        {slot}{isGranted ? " ★" : ""} · {upg.points ?? 0}pt
+                                      </div>
+                                      {isOwner && (
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 px-1 self-start text-xs"
+                                          onClick={() => rmUpMut.mutate({ data: { id: filled.id } })}
+                                        >Remove</Button>
+                                      )}
+                                    </div>
+                                  </HoverCardTrigger>
+                                  <HoverCardContent className="w-80">
+                                    <div className="space-y-2">
+                                      <div>
+                                        <div className="font-semibold">{upg.name}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {upg.slot} · {upg.points ?? 0}pt
+                                          {upg.faction ? ` · ${upg.faction}` : ""}
+                                          {upg.ship_xws ? ` · ${upg.ship_xws}` : ""}
+                                        </div>
+                                      </div>
+                                      {upg.text && (
+                                        <div
+                                          className="text-xs leading-relaxed"
+                                          dangerouslySetInnerHTML={{ __html: upg.text }}
+                                        />
+                                      )}
+                                      {upg.grants?.length > 0 && (
+                                        <div className="text-xs text-muted-foreground">
+                                          Grants: {upg.grants.join(", ")}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </HoverCardContent>
+                                </HoverCard>
+                              ) : (
+                                <div className="flex flex-col items-start justify-between gap-2 h-full">
+                                  <span className="text-muted-foreground text-xs">
+                                    Empty {slot}{isGranted ? " ★" : ""}
+                                  </span>
+                                  {isOwner && (
+                                    <AddUpgradeForSlotDialog
+                                      slot={slot}
+                                      upgrades={(upgradesData?.upgrades ?? []).filter(
+                                        (u: any) =>
+                                          u.slot === slot &&
+                                          (!u.faction || allowedFactionLabels.includes(u.faction)) &&
+                                          (!u.ship_xws || u.ship_xws === pilot?.ship_xws),
+                                      )}
+                                      squadTotal={totalPoints}
+                                      slotIndex={slotIndex}
+                                      onAdd={(xws) =>
+                                        addUpMut.mutate({
+                                          data: {
+                                            squad_pilot_id: sp.id,
+                                            upgrade_xws: xws,
+                                            position: slotIndex,
+                                          },
+                                        })
+                                      }
+                                    />
                                   )}
-                                  squadTotal={totalPoints}
-                                  onAdd={(xws) =>
-                                    addUpMut.mutate({
-                                      data: {
-                                        squad_pilot_id: sp.id,
-                                        upgrade_xws: xws,
-                                        position: slotIndex,
-                                      },
-                                    })
-                                  }
-                                />
+                                </div>
                               )}
-                            </>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           );
