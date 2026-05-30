@@ -101,11 +101,12 @@ function SquadDetail() {
   const pilotByXws = new Map((pilotsData?.pilots ?? []).map((p: any) => [p.xws, p]));
   const upgradeByXws = new Map((upgradesData?.upgrades ?? []).map((u: any) => [u.xws, u]));
 
-  // Squad stores short faction code ("rebel"), pilots/ships store full label ("Rebel Alliance")
-  const factionLabelForFilter =
-    FACTIONS.find((f) => f.value === squad.faction)?.label ?? squad.faction;
-  const factionPilots = (pilotsData?.pilots ?? []).filter(
-    (p: any) => p.faction === factionLabelForFilter,
+  // Squad stores a short code; multiple full-label factions can mix into one group.
+  const allowedFactionLabels =
+    FACTION_GROUPS[squad.faction] ??
+    [FACTIONS.find((f) => f.value === squad.faction)?.label ?? squad.faction];
+  const factionPilots = (pilotsData?.pilots ?? []).filter((p: any) =>
+    allowedFactionLabels.includes(p.faction),
   );
 
   const totalPoints = squadPilots.reduce((acc: number, sp: any) => {
