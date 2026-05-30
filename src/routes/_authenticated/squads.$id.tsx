@@ -299,7 +299,6 @@ function SquadDetail() {
                                           (!u.ship_xws || u.ship_xws === pilot?.ship_xws),
                                       )}
                                       squadTotal={totalPoints}
-                                      slotIndex={slotIndex}
                                       onAdd={(xws) =>
                                         addUpMut.mutate({
                                           data: {
