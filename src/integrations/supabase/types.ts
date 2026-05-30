@@ -428,12 +428,15 @@ export type Database = {
         Row: {
           attack: number | null
           created_at: string
+          faction: string | null
+          grants: string[]
           id: string
           image: string | null
           legacy_id: number | null
           name: string
           points: number
           range: string | null
+          ship_xws: string | null
           slot: string
           text: string | null
           updated_at: string
@@ -442,12 +445,15 @@ export type Database = {
         Insert: {
           attack?: number | null
           created_at?: string
+          faction?: string | null
+          grants?: string[]
           id?: string
           image?: string | null
           legacy_id?: number | null
           name: string
           points?: number
           range?: string | null
+          ship_xws?: string | null
           slot: string
           text?: string | null
           updated_at?: string
@@ -456,12 +462,15 @@ export type Database = {
         Update: {
           attack?: number | null
           created_at?: string
+          faction?: string | null
+          grants?: string[]
           id?: string
           image?: string | null
           legacy_id?: number | null
           name?: string
           points?: number
           range?: string | null
+          ship_xws?: string | null
           slot?: string
           text?: string | null
           updated_at?: string

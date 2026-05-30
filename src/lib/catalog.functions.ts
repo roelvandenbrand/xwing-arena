@@ -62,6 +62,9 @@ const upgradeSchema = z.object({
   text: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
   legacy_id: z.number().int().nullable().optional(),
+  faction: z.string().nullable().optional(),
+  ship_xws: z.string().nullable().optional(),
+  grants: z.array(z.string()).optional(),
 });
 
 async function assertAdmin(supabase: any, userId: string) {
