@@ -235,7 +235,7 @@ function SquadDetail() {
                           return (
                             <div
                               key={slotIndex}
-                              className="rounded border p-2 text-sm flex flex-col gap-1 min-h-[7rem]"
+                              className="rounded border p-2 text-sm flex flex-col gap-1 min-h-[13rem]"
                             >
                               {filled && upg ? (
                                 <HoverCard openDelay={120}>
@@ -244,7 +244,7 @@ function SquadDetail() {
                                       <CatalogImage
                                         src={upg.image}
                                         alt={upg.name}
-                                        className="h-24 w-auto rounded object-contain"
+                                        className="h-48 w-auto rounded object-contain"
                                       />
                                       <div className="font-medium text-xs truncate">{upg.name}</div>
                                       <div className="text-[10px] text-muted-foreground">
