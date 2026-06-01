@@ -27,6 +27,70 @@ export const logGame = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (data.opponent_id === userId) throw new Error("You can't log a game against yourself");
+
+    // If the user picked one of their saved squads, snapshot it so the squad
+    // (and its pilots/upgrades) stays viewable from the game even if the user
+    // later deletes the original from their squad list.
+    let snapshotSquadId: string | null = null;
+    if (data.my_squad_id) {
+      const { data: src, error: e0 } = await supabase
+        .from("squads")
+        .select("name, faction, user_id")
+        .eq("id", data.my_squad_id)
+        .maybeSingle();
+      if (e0) throw new Error(e0.message);
+      if (src) {
+        const { data: snap, error: e1 } = await supabase
+          .from("squads")
+          .insert({
+            user_id: src.user_id,
+            name: `${src.name} (game snapshot)`,
+            faction: src.faction,
+            is_snapshot: true,
+          })
+          .select("id")
+          .single();
+        if (e1) throw new Error(e1.message);
+        snapshotSquadId = snap.id;
+
+        const { data: sps } = await supabase
+          .from("squad_pilots")
+          .select("pilot_xws, position, id")
+          .eq("squad_id", data.my_squad_id)
+          .order("position");
+        if (sps && sps.length) {
+          const spIds = sps.map((sp) => sp.id);
+          const { data: ups } = await supabase
+            .from("squad_pilot_upgrades")
+            .select("squad_pilot_id, upgrade_xws, position")
+            .in("squad_pilot_id", spIds);
+          for (const sp of sps) {
+            const { data: newSp, error: e2 } = await supabase
+              .from("squad_pilots")
+              .insert({
+                squad_id: snapshotSquadId,
+                pilot_xws: sp.pilot_xws,
+                position: sp.position,
+              })
+              .select("id")
+              .single();
+            if (e2) throw new Error(e2.message);
+            const mine = (ups ?? []).filter((u) => u.squad_pilot_id === sp.id);
+            if (mine.length) {
+              const { error: e3 } = await supabase.from("squad_pilot_upgrades").insert(
+                mine.map((u) => ({
+                  squad_pilot_id: newSp.id,
+                  upgrade_xws: u.upgrade_xws,
+                  position: u.position,
+                })),
+              );
+              if (e3) throw new Error(e3.message);
+            }
+          }
+        }
+      }
+    }
+
     const { error } = await supabase.from("games").insert({
       competition_id: data.competition_id,
       player1_id: userId,
@@ -37,7 +101,7 @@ export const logGame = createServerFn({ method: "POST" })
       player2_points: data.opponent_points,
       player1_faction: data.my_faction,
       player2_faction: data.opponent_faction,
-      player1_squad_id: data.my_squad_id ?? null,
+      player1_squad_id: snapshotSquadId ?? data.my_squad_id ?? null,
       player2_squad_id: data.opponent_squad_id ?? null,
       reported_by: userId,
       status: "pending",

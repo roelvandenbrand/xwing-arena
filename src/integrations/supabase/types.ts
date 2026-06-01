@@ -402,6 +402,7 @@ export type Database = {
           created_at: string
           faction: string
           id: string
+          is_snapshot: boolean
           name: string
           updated_at: string
           user_id: string
@@ -410,6 +411,7 @@ export type Database = {
           created_at?: string
           faction: string
           id?: string
+          is_snapshot?: boolean
           name: string
           updated_at?: string
           user_id: string
@@ -418,6 +420,7 @@ export type Database = {
           created_at?: string
           faction?: string
           id?: string
+          is_snapshot?: boolean
           name?: string
           updated_at?: string
           user_id?: string
