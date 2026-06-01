@@ -329,16 +329,19 @@ function UpgradesList() {
         {filtered.length === 0 && <li className="p-3 text-sm text-muted-foreground">No upgrades.</li>}
       </ul>
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
           <DialogHeader><DialogTitle>Edit upgrade</DialogTitle></DialogHeader>
           {editing && (
-            <div className="space-y-3">
-              <XwsDisplay xws={editing.xws} hint="Name your image file: " ext="png" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1">
+              <div className="md:col-span-2">
+                <XwsDisplay xws={editing.xws} hint="Name your image file: " ext="png" />
+              </div>
               <Field label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
               <Field label="Slot" value={editing.slot} onChange={(v) => setEditing({ ...editing, slot: v })} />
               <NumField label="Points" value={editing.points} onChange={(v) => setEditing({ ...editing, points: v })} />
               <NumField label="Attack" value={editing.attack ?? 0} onChange={(v) => setEditing({ ...editing, attack: v })} />
               <Field label="Range" value={editing.range ?? ""} onChange={(v) => setEditing({ ...editing, range: v })} />
+              <Field label="Image URL" value={editing.image ?? ""} onChange={(v) => setEditing({ ...editing, image: v })} />
               <div className="space-y-1">
                 <Label>Faction restriction</Label>
                 <select
@@ -367,48 +370,54 @@ function UpgradesList() {
                   ))}
                 </select>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 md:col-span-2">
                 <Label>Grants extra slots</Label>
                 <p className="text-xs text-muted-foreground">
-                  Number of extra slots this upgrade grants per type.
+                  Number of extra slots this upgrade grants per type. Use a negative number to remove a slot from the pilot.
                 </p>
-                <div className="grid grid-cols-3 gap-2 rounded-md border p-2 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 rounded-md border p-2 text-xs">
                   {[
                     "Astromech","Cannon","Crew","Device","Force Power","Gunner",
                     "Hardpoint","Illicit","Missile","Modification","Sensor",
                     "Talent","Tech","Title","Torpedo","Turret","Configuration",
                   ].map((slot) => {
                     const grants: string[] = editing.grants ?? [];
-                    const count = grants.filter((s) => s === slot).length;
+                    const positives = grants.filter((s) => s === slot).length;
+                    const negatives = grants.filter((s) => s === `-${slot}`).length;
+                    const count = positives - negatives;
                     return (
                       <label key={slot} className="flex items-center justify-between gap-1">
                         <span>{slot}</span>
                         <input
                           type="number"
-                          min={0}
+                          min={-9}
                           max={9}
                           value={count}
                           onChange={(e) => {
-                            const n = Math.max(0, parseInt(e.target.value) || 0);
-                            const others = grants.filter((s) => s !== slot);
-                            const next = [...others, ...Array(n).fill(slot)];
+                            const raw = parseInt(e.target.value);
+                            const n = Number.isNaN(raw) ? 0 : Math.max(-9, Math.min(9, raw));
+                            const others = grants.filter((s) => s !== slot && s !== `-${slot}`);
+                            const additions =
+                              n >= 0
+                                ? Array(n).fill(slot)
+                                : Array(-n).fill(`-${slot}`);
+                            const next = [...others, ...additions];
                             setEditing({ ...editing, grants: next });
                           }}
-                          className="w-12 rounded border border-input bg-background px-1 py-0.5 text-xs"
+                          className="w-14 rounded border border-input bg-background px-1 py-0.5 text-xs"
                         />
                       </label>
                     );
                   })}
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 md:col-span-2">
                 <Label>Card text (HTML allowed)</Label>
                 <Textarea rows={4} value={editing.text ?? ""} onChange={(e) => setEditing({ ...editing, text: e.target.value })} />
               </div>
-              <Field label="Image URL" value={editing.image ?? ""} onChange={(v) => setEditing({ ...editing, image: v })} />
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="mt-2 border-t pt-3">
             <Button
               disabled={m.isPending}
               onClick={() => {
