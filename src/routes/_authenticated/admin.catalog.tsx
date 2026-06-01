@@ -369,27 +369,33 @@ function UpgradesList() {
               </div>
               <div className="space-y-1">
                 <Label>Grants extra slots</Label>
-                <div className="grid grid-cols-3 gap-1 rounded-md border p-2 text-xs">
+                <p className="text-xs text-muted-foreground">
+                  Number of extra slots this upgrade grants per type.
+                </p>
+                <div className="grid grid-cols-3 gap-2 rounded-md border p-2 text-xs">
                   {[
                     "Astromech","Cannon","Crew","Device","Force Power","Gunner",
                     "Hardpoint","Illicit","Missile","Modification","Sensor",
                     "Talent","Tech","Title","Torpedo","Turret","Configuration",
                   ].map((slot) => {
                     const grants: string[] = editing.grants ?? [];
-                    const checked = grants.includes(slot);
+                    const count = grants.filter((s) => s === slot).length;
                     return (
-                      <label key={slot} className="flex items-center gap-1">
+                      <label key={slot} className="flex items-center justify-between gap-1">
+                        <span>{slot}</span>
                         <input
-                          type="checkbox"
-                          checked={checked}
+                          type="number"
+                          min={0}
+                          max={9}
+                          value={count}
                           onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...grants, slot]
-                              : grants.filter((s) => s !== slot);
+                            const n = Math.max(0, parseInt(e.target.value) || 0);
+                            const others = grants.filter((s) => s !== slot);
+                            const next = [...others, ...Array(n).fill(slot)];
                             setEditing({ ...editing, grants: next });
                           }}
+                          className="w-12 rounded border border-input bg-background px-1 py-0.5 text-xs"
                         />
-                        {slot}
                       </label>
                     );
                   })}
