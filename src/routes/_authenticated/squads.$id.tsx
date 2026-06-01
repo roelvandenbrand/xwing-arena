@@ -175,13 +175,30 @@ function SquadDetail() {
             0,
           );
           const pPts = pilot?.points ?? 0;
-          const baseSlots: string[] = pilot?.slots ?? [];
-          // Append slots granted by equipped upgrades (in equip order).
+          const pilotBaseSlots: string[] = pilot?.slots ?? [];
+          // Apply grants from equipped upgrades. An entry like "-Talent"
+          // removes a slot of that type instead of adding one.
+          const remainingBase: string[] = [...pilotBaseSlots];
           const grantedSlots: string[] = [];
           for (const u of myUps) {
             const upg: any = upgradeByXws.get(u.upgrade_xws);
-            if (upg?.grants?.length) grantedSlots.push(...upg.grants);
+            if (!upg?.grants?.length) continue;
+            for (const g of upg.grants as string[]) {
+              if (g.startsWith("-")) {
+                const target = g.slice(1);
+                // Prefer removing an unused base slot of that type.
+                const idx = remainingBase.findIndex((s) => s === target);
+                if (idx >= 0) remainingBase.splice(idx, 1);
+                else {
+                  const gi = grantedSlots.findIndex((s) => s === target);
+                  if (gi >= 0) grantedSlots.splice(gi, 1);
+                }
+              } else {
+                grantedSlots.push(g);
+              }
+            }
           }
+          const baseSlots: string[] = remainingBase;
           const slots: string[] = [...baseSlots, ...grantedSlots];
           // Split slots into 2 visual rows.
           const rowSize = Math.ceil(slots.length / 2) || 1;
