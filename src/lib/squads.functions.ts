@@ -10,6 +10,7 @@ export const listMySquads = createServerFn({ method: "GET" })
       .from("squads")
       .select("*")
       .eq("user_id", userId)
+      .eq("is_snapshot", false)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
 
