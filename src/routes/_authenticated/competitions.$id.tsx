@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -328,6 +328,28 @@ function CompetitionDetail() {
                           <pre className="whitespace-pre-wrap"><strong>{p2Name}:</strong>{"\n"}{g.player2_squad_text || "—"}</pre>
                         </div>
                       </details>
+                    )}
+                    {(g.player1_squad_id || g.player2_squad_id) && (
+                      <div className="flex flex-wrap gap-3 text-xs">
+                        {g.player1_squad_id && (
+                          <Link
+                            to="/squads/$id"
+                            params={{ id: g.player1_squad_id }}
+                            className="text-primary hover:underline"
+                          >
+                            View {p1Name}'s squad →
+                          </Link>
+                        )}
+                        {g.player2_squad_id && (
+                          <Link
+                            to="/squads/$id"
+                            params={{ id: g.player2_squad_id }}
+                            className="text-primary hover:underline"
+                          >
+                            View {p2Name}'s squad →
+                          </Link>
+                        )}
+                      </div>
                     )}
                     <div className="flex flex-wrap gap-2">
                       {needsMyConfirmation && (
