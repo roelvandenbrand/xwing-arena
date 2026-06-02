@@ -567,7 +567,7 @@ function AddUpgradeForSlotDialog({
   const [q, setQ] = useState("");
   const filtered = upgrades
     .filter((u) => !q || u.name.toLowerCase().includes(q.toLowerCase()))
-    .sort((a, b) => (a.points ?? 0) - (b.points ?? 0));
+    .sort((a, b) => (a.points ?? 0) - (b.points ?? 0) || a.name.localeCompare(b.name));
   return (
     <Dialog
       open={open}
