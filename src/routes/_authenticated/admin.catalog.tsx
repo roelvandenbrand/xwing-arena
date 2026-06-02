@@ -341,7 +341,16 @@ function UpgradesList() {
               <NumField label="Points" value={editing.points} onChange={(v) => setEditing({ ...editing, points: v })} />
               <NumField label="Attack" value={editing.attack ?? 0} onChange={(v) => setEditing({ ...editing, attack: v })} />
               <Field label="Range" value={editing.range ?? ""} onChange={(v) => setEditing({ ...editing, range: v })} />
-              <Field label="Image URL" value={editing.image ?? ""} onChange={(v) => setEditing({ ...editing, image: v })} />
+              <div className="md:col-span-2 space-y-1">
+                <Field label="Image URL" value={editing.image ?? ""} onChange={(v) => setEditing({ ...editing, image: v })} />
+                {editing.image && (
+                  <img
+                    src={editing.image}
+                    alt={editing.name}
+                    className="h-48 w-auto rounded object-contain bg-muted/30"
+                  />
+                )}
+              </div>
               <div className="space-y-1">
                 <Label>Faction restriction</Label>
                 <select
