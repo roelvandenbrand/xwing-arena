@@ -264,6 +264,33 @@ export const addUpgradeToPilot = createServerFn({ method: "POST" })
       position,
     });
     if (error) throw new Error(error.message);
+
+    // Remove any upgrades occupying slots that this upgrade negates via grants.
+    const { data: upgradeRow } = await supabase
+      .from("upgrades")
+      .select("grants")
+      .eq("xws", data.upgrade_xws)
+      .single();
+
+    const negated = (upgradeRow?.grants ?? [])
+      .filter((g: string) => g.startsWith("-"))
+      .map((g: string) => g.slice(1));
+
+    if (negated.length > 0) {
+      const { data: existing } = await supabase
+        .from("squad_pilot_upgrades")
+        .select("id, upgrade_xws, upgrades!inner(slot)")
+        .eq("squad_pilot_id", data.squad_pilot_id);
+
+      const toRemove = (existing ?? [])
+        .filter((u: any) => negated.includes(u.upgrades?.slot))
+        .map((u: any) => u.id);
+
+      if (toRemove.length > 0) {
+        await supabase.from("squad_pilot_upgrades").delete().in("id", toRemove);
+      }
+    }
+
     return { ok: true };
   });
 
