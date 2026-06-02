@@ -245,8 +245,6 @@ function SquadDetail() {
               slotIsGranted.push(false);
             }
           }
-          // Split slots into 2 visual rows.
-          const rowSize = Math.ceil(slots.length / 2) || 1;
           return (
             <Card key={sp.id}>
               <CardContent className="p-4">
@@ -288,8 +286,7 @@ function SquadDetail() {
                         style={{
                           gridTemplateColumns: isMobile
                             ? "repeat(2, minmax(0, 1fr))"
-                            : `repeat(${rowSize}, minmax(160px, max-content))`,
-                          gridTemplateRows: "repeat(2, auto)",
+                            : "repeat(auto-fill, minmax(160px, 1fr))",
                         }}
                       >
                         {slots.map((slot, slotIndex) => {

@@ -482,7 +482,19 @@ function LogGameDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Your squad</Label>
+            <div className="flex items-center justify-between">
+              <Label>Your squad</Label>
+              {mySquadId && (
+                <a
+                  href={`/squads/${mySquadId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-muted-foreground underline"
+                >
+                  Edit squad ↗
+                </a>
+              )}
+            </div>
             {squadsData && squadsData.squads.length > 0 && (
               <Select value={mySquadId || "__none"} onValueChange={(v) => setMySquadId(v === "__none" ? "" : v)}>
                 <SelectTrigger><SelectValue placeholder="Pick a saved squad (optional)" /></SelectTrigger>
