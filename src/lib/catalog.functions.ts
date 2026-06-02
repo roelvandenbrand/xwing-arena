@@ -150,15 +150,40 @@ export const importUpgrades = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ items: z.array(upgradeSchema).max(5000) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+
+    // Build ship lookup so upgrade ship_xws values can be resolved by display
+    // name (e.g. "TIE Bomber" → "tiebomber"), matching the pilot import logic.
+    const { data: ships, error: shipsErr } = await context.supabase
+      .from("ships")
+      .select("xws,name");
+    if (shipsErr) throw new Error(shipsErr.message);
+    const shipByName = new Map<string, string>();
+    const shipXwsSet = new Set<string>();
+    for (const s of ships ?? []) {
+      shipByName.set(s.name.toLowerCase(), s.xws);
+      shipXwsSet.add(s.xws);
+    }
+
     // Dedupe by xws — upstream JSON often lists the same upgrade once per slot variant.
     const byXws = new Map<string, (typeof data.items)[number]>();
     for (const u of data.items) byXws.set(u.xws, u);
-    const deduped = Array.from(byXws.values());
+
+    const normalized = Array.from(byXws.values()).map((u) => {
+      let ship_xws = u.ship_xws ?? null;
+      if (ship_xws && !shipXwsSet.has(ship_xws)) {
+        // Try resolving by display name (case-insensitive); fall back to
+        // lowercasing so prefix values like "TIE" become "tie" and match
+        // consistently with the startsWith filter in the squad builder.
+        ship_xws = shipByName.get(ship_xws.toLowerCase()) ?? ship_xws.toLowerCase();
+      }
+      return { ...u, ship_xws };
+    });
+
     const { error } = await context.supabase
       .from("upgrades")
-      .upsert(deduped, { onConflict: "xws" });
+      .upsert(normalized, { onConflict: "xws" });
     if (error) throw new Error(error.message);
-    return { ok: true, count: deduped.length };
+    return { ok: true, count: normalized.length };
   });
 
 // ---------- List ----------
