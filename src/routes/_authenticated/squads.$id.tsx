@@ -291,6 +291,7 @@ function SquadDetail() {
                       >
                         {slots.map((slot, slotIndex) => {
                           const filled = myUps.find((u: any) => u.position === slotIndex);
+                          if (slot === "?" && !filled) return null;
                           const upg: any = filled ? upgradeByXws.get(filled.upgrade_xws) : null;
                           const isGranted = slotIsGranted[slotIndex] ?? false;
                           return (
