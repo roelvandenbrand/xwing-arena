@@ -171,37 +171,80 @@ function SquadDetail() {
         )}
         {squadPilots.map((sp: any) => {
           const pilot: any = pilotByXws.get(sp.pilot_xws);
-          const myUps = squadPilotUpgrades.filter((u: any) => u.squad_pilot_id === sp.id);
+          const myUps = squadPilotUpgrades
+            .filter((u: any) => u.squad_pilot_id === sp.id)
+            .sort((a: any, b: any) => a.position - b.position);
           const upPts = myUps.reduce(
             (s: number, u: any) => s + ((upgradeByXws.get(u.upgrade_xws) as any)?.points ?? 0),
             0,
           );
           const pPts = pilot?.points ?? 0;
           const pilotBaseSlots: string[] = pilot?.slots ?? [];
-          // Apply grants from equipped upgrades. An entry like "-Talent"
-          // removes a slot of that type instead of adding one.
-          const remainingBase: string[] = [...pilotBaseSlots];
-          const grantedSlots: string[] = [];
+          // Collect grants from equipped upgrades. "-X" entries remove an
+          // unused slot of type X; positive entries add a slot.
+          const positives: string[] = [];
+          const negatives: string[] = [];
           for (const u of myUps) {
             const upg: any = upgradeByXws.get(u.upgrade_xws);
             if (!upg?.grants?.length) continue;
             for (const g of upg.grants as string[]) {
-              if (g.startsWith("-")) {
-                const target = g.slice(1);
-                // Prefer removing an unused base slot of that type.
-                const idx = remainingBase.findIndex((s) => s === target);
-                if (idx >= 0) remainingBase.splice(idx, 1);
-                else {
-                  const gi = grantedSlots.findIndex((s) => s === target);
-                  if (gi >= 0) grantedSlots.splice(gi, 1);
-                }
-              } else {
-                grantedSlots.push(g);
-              }
+              if (g.startsWith("-")) negatives.push(g.slice(1));
+              else positives.push(g);
             }
           }
-          const baseSlots: string[] = remainingBase;
-          const slots: string[] = [...baseSlots, ...grantedSlots];
+
+          // Pool of available slot types = base + positive grants,
+          // minus the slot types already occupied by equipped upgrades,
+          // minus negative grants (only against the unused pool — never
+          // against a slot that's currently filled).
+          const grantedSet = new Set(positives);
+          const pool: string[] = [...pilotBaseSlots, ...positives];
+          for (const u of myUps) {
+            const upg: any = upgradeByXws.get(u.upgrade_xws);
+            const slotName = upg?.slot;
+            if (!slotName) continue;
+            const idx = pool.indexOf(slotName);
+            if (idx >= 0) pool.splice(idx, 1);
+          }
+          for (const n of negatives) {
+            const idx = pool.indexOf(n);
+            if (idx >= 0) pool.splice(idx, 1);
+          }
+
+          // Place each filled upgrade at its stored position with its own
+          // slot type; fill the remaining positions in order from the pool.
+          const filledByPos = new Map<number, { slot: string; granted: boolean }>();
+          for (const u of myUps) {
+            const upg: any = upgradeByXws.get(u.upgrade_xws);
+            const slotName = upg?.slot ?? "?";
+            // A filled upgrade is "granted" if its slot type doesn't exist
+            // in the pilot's base slots (i.e. only the granted pool offers it).
+            const inBase = pilotBaseSlots.includes(slotName);
+            filledByPos.set(u.position, { slot: slotName, granted: !inBase && grantedSet.has(slotName) });
+          }
+          const maxPos = myUps.reduce((m: number, u: any) => Math.max(m, u.position), -1);
+          const totalLen = Math.max(maxPos + 1, 0) + pool.length;
+          const slots: string[] = [];
+          const slotIsGranted: boolean[] = [];
+          let poolIdx = 0;
+          for (let i = 0; i < totalLen; i++) {
+            const f = filledByPos.get(i);
+            if (f) {
+              slots.push(f.slot);
+              slotIsGranted.push(f.granted);
+            } else if (poolIdx < pool.length) {
+              const s = pool[poolIdx++];
+              slots.push(s);
+              // Mark as granted only after base slots of that type are
+              // exhausted earlier in the layout.
+              const baseCount = pilotBaseSlots.filter((b) => b === s).length;
+              const seenSoFar = slots.slice(0, -1).filter((x) => x === s).length;
+              slotIsGranted.push(seenSoFar >= baseCount);
+            } else {
+              slots.push("?");
+              slotIsGranted.push(false);
+            }
+          }
           // Split slots into 2 visual rows.
           const rowSize = Math.ceil(slots.length / 2) || 1;
           return (
@@ -252,7 +295,7 @@ function SquadDetail() {
                         {slots.map((slot, slotIndex) => {
                           const filled = myUps.find((u: any) => u.position === slotIndex);
                           const upg: any = filled ? upgradeByXws.get(filled.upgrade_xws) : null;
-                          const isGranted = slotIndex >= baseSlots.length;
+                          const isGranted = slotIsGranted[slotIndex] ?? false;
                           return (
                             <div
                               key={slotIndex}
