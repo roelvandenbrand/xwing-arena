@@ -305,6 +305,15 @@ function UpgradesList() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["upgrades"], queryFn: () => fn() });
   const { q, setQ, filtered } = useSearchFilter(data?.upgrades ?? []);
+  const [slotFilter, setSlotFilter] = useState("");
+  const allSlots = useMemo(
+    () => Array.from(new Set((data?.upgrades ?? []).map((u: any) => u.slot as string))).sort(),
+    [data],
+  );
+  const displayedUpgrades = useMemo(
+    () => slotFilter ? filtered.filter((u: any) => u.slot === slotFilter) : filtered,
+    [filtered, slotFilter],
+  );
   const update = useServerFn(updateUpgrade);
   const m = useMutation({
     mutationFn: update,
@@ -315,9 +324,19 @@ function UpgradesList() {
 
   return (
     <div className="space-y-2">
-      <Input placeholder="Search upgrades…" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="flex gap-2">
+        <Input placeholder="Search upgrades…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          value={slotFilter}
+          onChange={(e) => setSlotFilter(e.target.value)}
+        >
+          <option value="">All slots</option>
+          {allSlots.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
       <ul className="divide-y rounded-md border max-h-[600px] overflow-y-auto">
-        {filtered.map((u: any) => (
+        {displayedUpgrades.map((u: any) => (
           <li key={u.xws} className="flex items-center justify-between p-2 text-sm">
             <span>
               <span className="font-medium">{u.name}</span>{" "}
@@ -326,7 +345,7 @@ function UpgradesList() {
             <Button size="sm" variant="ghost" onClick={() => setEditing(u)}>Edit</Button>
           </li>
         ))}
-        {filtered.length === 0 && <li className="p-3 text-sm text-muted-foreground">No upgrades.</li>}
+        {displayedUpgrades.length === 0 && <li className="p-3 text-sm text-muted-foreground">No upgrades.</li>}
       </ul>
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
