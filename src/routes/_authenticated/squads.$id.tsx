@@ -358,7 +358,7 @@ function SquadDetail() {
                                         (u: any) =>
                                           u.slot === slot &&
                                           (!u.faction || allowedFactionLabels.includes(u.faction)) &&
-                                          (!u.ship_xws || u.ship_xws === pilot?.ship_xws),
+                                          (!u.ship_xws || (pilot?.ship_xws ?? "").startsWith(u.ship_xws.toLowerCase())),
                                       )}
                                       squadTotal={totalPoints}
                                       onAdd={(xws) =>

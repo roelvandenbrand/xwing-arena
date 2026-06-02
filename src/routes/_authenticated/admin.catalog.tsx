@@ -387,16 +387,21 @@ function UpgradesList() {
               </div>
               <div className="space-y-1">
                 <Label>Ship restriction</Label>
-                <select
+                <input
+                  list="ship-xws-options"
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={editing.ship_xws ?? ""}
                   onChange={(e) => setEditing({ ...editing, ship_xws: e.target.value || null })}
-                >
-                  <option value="">Any ship</option>
+                  placeholder="Any ship (leave blank)"
+                />
+                <datalist id="ship-xws-options">
                   {(shipsData?.ships ?? []).map((s: any) => (
-                    <option key={s.xws} value={s.xws}>{s.name} ({s.xws})</option>
+                    <option key={s.xws} value={s.xws}>{s.name}</option>
                   ))}
-                </select>
+                </datalist>
+                <p className="text-xs text-muted-foreground">
+                  Leave blank for any ship. Pick a ship from the list, or type a prefix (e.g. <code>tie</code> matches all TIE ships).
+                </p>
               </div>
               <div className="space-y-1 md:col-span-2">
                 <Label>Grants extra slots</Label>
