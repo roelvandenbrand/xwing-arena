@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   getSquad,
   updateSquad,
@@ -92,6 +93,7 @@ function SquadDetail() {
 
   // Local edit state for header
   const [editName, setEditName] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   if (isLoading) return <p className="text-muted-foreground">Loading…</p>;
   if (error) return <p className="text-destructive">{(error as Error).message}</p>;
@@ -241,7 +243,9 @@ function SquadDetail() {
                       <div
                         className="grid gap-2"
                         style={{
-                          gridTemplateColumns: `repeat(${rowSize}, minmax(160px, 1fr))`,
+                          gridTemplateColumns: isMobile
+                            ? "repeat(2, minmax(0, 1fr))"
+                            : `repeat(${rowSize}, minmax(160px, max-content))`,
                           gridTemplateRows: "repeat(2, auto)",
                         }}
                       >
