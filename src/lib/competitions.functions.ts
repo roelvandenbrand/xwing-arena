@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { computeStandings } from "@/lib/standings";
 
 const idInput = z.object({ id: z.string().uuid() });
 
@@ -65,6 +66,65 @@ export const listOpenCompetitions = createServerFn({ method: "GET" })
         ...c,
         membership: membershipMap.get(c.id) ?? null,
       })),
+    };
+  });
+
+const PAGE_SIZE = 10;
+
+export const listClosedCompetitions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ page: z.number().int().min(0) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const from = data.page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data: comps, error, count } = await supabase
+      .from("competitions")
+      .select("*", { count: "exact" })
+      .eq("status", "closed")
+      .order("finished_at", { ascending: false })
+      .range(from, to);
+    if (error) throw new Error(error.message);
+
+    const ids = (comps ?? []).map((c) => c.id);
+    if (ids.length === 0) return { competitions: [], total: count ?? 0 };
+
+    const { data: members } = await supabase
+      .from("competition_members")
+      .select("competition_id, user_id, status")
+      .in("competition_id", ids);
+
+    const userIds = [...new Set((members ?? []).map((m) => m.user_id))];
+    const { data: profiles } = userIds.length
+      ? await supabase.from("profiles").select("id, display_name").in("id", userIds)
+      : { data: [] as { id: string; display_name: string }[] };
+    const nameMap = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+    const { data: games } = await supabase
+      .from("games")
+      .select("competition_id, player1_id, player2_id, player1_points, player2_points, winner_id, is_draw, status")
+      .in("competition_id", ids);
+
+    return {
+      competitions: (comps ?? []).map((c) => {
+        const compMembers = (members ?? [])
+          .filter((m) => m.competition_id === c.id)
+          .map((m) => ({
+            user_id: m.user_id,
+            display_name: nameMap.get(m.user_id) ?? "Unknown",
+            status: m.status,
+          }));
+        const compGames = (games ?? []).filter((g) => g.competition_id === c.id);
+        const standings = computeStandings(compGames, compMembers);
+        const playerCount = compMembers.filter((m) => m.status === "approved").length;
+        return {
+          ...c,
+          player_count: playerCount,
+          winner_name: standings[0]?.display_name ?? null,
+        };
+      }),
+      total: count ?? 0,
     };
   });
 
