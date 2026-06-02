@@ -11,8 +11,15 @@ const statusColor: Record<Status, string> = {
   finished: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400",
 };
 
+const statusDisplayLabel: Record<Status, string> = {
+  draft: "draft",
+  open: "open",
+  running: "running",
+  finished: "closed",
+};
+
 export function StatusBadge({ status }: { status: Status }) {
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColor[status]}`}>{status}</span>;
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColor[status]}`}>{statusDisplayLabel[status]}</span>;
 }
 
 export interface CompetitionCardProps {
