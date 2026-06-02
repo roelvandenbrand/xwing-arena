@@ -82,7 +82,7 @@ export const listClosedCompetitions = createServerFn({ method: "GET" })
     const { data: comps, error, count } = await supabase
       .from("competitions")
       .select("*", { count: "exact" })
-      .eq("status", "closed")
+      .eq("status", "finished")
       .order("finished_at", { ascending: false })
       .range(from, to);
     if (error) throw new Error(error.message);
@@ -232,6 +232,12 @@ export const deleteCompetition = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => idInput.parse(d))
   .handler(async ({ data, context }) => {
+    const { data: comp } = await context.supabase
+      .from("competitions")
+      .select("status")
+      .eq("id", data.id)
+      .single();
+    if (comp?.status === "finished") throw new Error("Closed competitions cannot be deleted.");
     const { error } = await context.supabase.from("competitions").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };

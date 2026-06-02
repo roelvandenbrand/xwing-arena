@@ -113,7 +113,8 @@ function CompetitionDetail() {
   const approvedMembers = members.filter((m) => m.status === "approved");
   const pendingMembers = members.filter((m) => m.status === "pending");
   const isMember = myMembership?.status === "approved";
-  const canLog = isMember && (competition.status === "running" || competition.status === "finished");
+  const isClosed = competition.status === "finished";
+  const canLog = isMember && competition.status === "running";
   const standings = computeStandings(games, members);
 
   const nextStatus = {
@@ -126,14 +127,14 @@ function CompetitionDetail() {
   const statusLabel = {
     open: "Publish (open for joining)",
     running: "Start competition (lock-in & enable games)",
-    finished: "Mark finished",
+    finished: "Close competition",
   };
 
   const statusHelp: Record<string, string> = {
     draft: "Draft — only you (admin) can see this competition. Publish it so players can request to join.",
     open: "Open — visible to everyone in Browse. Players can request to join and you approve them below.",
     running: "Running — players can log games. You can still approve late join requests.",
-    finished: "Finished — standings are final. Games can still be logged for late entries.",
+    finished: "Closed — this competition is locked. All data is preserved for review; no further edits are allowed.",
   };
 
   return (
@@ -153,7 +154,7 @@ function CompetitionDetail() {
         </div>
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
-            {!myMembership && (
+            {!myMembership && !isClosed && (
               <Button
                 size="sm"
                 variant="secondary"
@@ -165,22 +166,28 @@ function CompetitionDetail() {
             {nextStatus && (
               <Button
                 size="sm"
-                onClick={() => setStatusMut.mutate({ data: { id, status: nextStatus } })}
+                variant={nextStatus === "finished" ? "destructive" : "default"}
+                onClick={() => {
+                  if (nextStatus === "finished" && !confirm("Close this competition? No further edits will be allowed.")) return;
+                  setStatusMut.mutate({ data: { id, status: nextStatus } });
+                }}
               >
                 {statusLabel[nextStatus]}
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => {
-                if (confirm("Delete this competition? This is permanent.")) {
-                  deleteCompMut.mutate({ data: { id } });
-                }
-              }}
-            >
-              Delete
-            </Button>
+            {!isClosed && (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  if (confirm("Delete this competition? This is permanent.")) {
+                    deleteCompMut.mutate({ data: { id } });
+                  }
+                }}
+              >
+                Delete
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -237,7 +244,7 @@ function CompetitionDetail() {
         </CardContent>
       </Card>
 
-      {isAdmin && pendingMembers.length > 0 && (
+      {isAdmin && !isClosed && pendingMembers.length > 0 && (
         <Card>
           <CardHeader><CardTitle>Pending join requests</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -271,7 +278,7 @@ function CompetitionDetail() {
               {approvedMembers.map((m) => (
                 <li key={m.id} className="flex items-center justify-between py-2">
                   <span>{m.display_name}</span>
-                  {isAdmin && (
+                  {isAdmin && !isClosed && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -351,28 +358,30 @@ function CompetitionDetail() {
                         )}
                       </div>
                     )}
-                    <div className="flex flex-wrap gap-2">
-                      {needsMyConfirmation && (
-                        <>
-                          <Button size="sm" onClick={() => decideGameMut.mutate({ data: { game_id: g.id, decision: "confirmed" } })}>Confirm</Button>
-                          <Button size="sm" variant="outline" onClick={() => decideGameMut.mutate({ data: { game_id: g.id, decision: "rejected" } })}>Reject</Button>
-                        </>
-                      )}
-                      {isAdmin && g.status === "pending" && (
-                        <Button size="sm" variant="secondary" onClick={() => decideGameMut.mutate({ data: { game_id: g.id, decision: "confirmed" } })}>
-                          Admin confirm
-                        </Button>
-                      )}
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            if (confirm("Delete this game?")) deleteGameMut.mutate({ data: { game_id: g.id } });
-                          }}
-                        >Delete</Button>
-                      )}
-                    </div>
+                    {!isClosed && (
+                      <div className="flex flex-wrap gap-2">
+                        {needsMyConfirmation && (
+                          <>
+                            <Button size="sm" onClick={() => decideGameMut.mutate({ data: { game_id: g.id, decision: "confirmed" } })}>Confirm</Button>
+                            <Button size="sm" variant="outline" onClick={() => decideGameMut.mutate({ data: { game_id: g.id, decision: "rejected" } })}>Reject</Button>
+                          </>
+                        )}
+                        {isAdmin && g.status === "pending" && (
+                          <Button size="sm" variant="secondary" onClick={() => decideGameMut.mutate({ data: { game_id: g.id, decision: "confirmed" } })}>
+                            Admin confirm
+                          </Button>
+                        )}
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (confirm("Delete this game?")) deleteGameMut.mutate({ data: { game_id: g.id } });
+                            }}
+                          >Delete</Button>
+                        )}
+                      </div>
+                    )}
                   </li>
                 );
               })}
