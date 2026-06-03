@@ -128,13 +128,15 @@ export const updateSquad = createServerFn({ method: "POST" })
         id: z.string().uuid(),
         name: z.string().min(1).max(120).optional(),
         faction: z.string().min(1).max(60).optional(),
+        is_public: z.boolean().optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const patch: { name?: string; faction?: string } = {};
+    const patch: { name?: string; faction?: string; is_public?: boolean } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.faction !== undefined) patch.faction = data.faction;
+    if (data.is_public !== undefined) patch.is_public = data.is_public;
     const { error } = await context.supabase
       .from("squads")
       .update(patch)
