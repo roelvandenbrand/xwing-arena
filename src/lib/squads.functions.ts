@@ -2,6 +2,72 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export const listPublicSquads = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: squads, error } = await supabase
+      .from("squads")
+      .select("*")
+      .eq("is_public", true)
+      .eq("is_snapshot", false)
+      .neq("user_id", userId)
+      .order("updated_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const ids = (squads ?? []).map((s) => s.id);
+    if (ids.length === 0) return { squads: [] };
+
+    const { data: sps } = await supabase
+      .from("squad_pilots")
+      .select("id, squad_id, pilot_xws")
+      .in("squad_id", ids);
+
+    const pilotXws = [...new Set((sps ?? []).map((sp) => sp.pilot_xws))];
+    const { data: pilots } = pilotXws.length
+      ? await supabase.from("pilots").select("xws, points").in("xws", pilotXws)
+      : { data: [] as any[] };
+    const pPoints = new Map((pilots ?? []).map((p: any) => [p.xws, p.points]));
+
+    const spIds = (sps ?? []).map((sp) => sp.id);
+    const { data: spUps } = spIds.length
+      ? await supabase
+          .from("squad_pilot_upgrades")
+          .select("squad_pilot_id, upgrade_xws")
+          .in("squad_pilot_id", spIds)
+      : { data: [] as any[] };
+
+    const upXws = [...new Set((spUps ?? []).map((u) => u.upgrade_xws))];
+    const { data: upgrades } = upXws.length
+      ? await supabase.from("upgrades").select("xws, points").in("xws", upXws)
+      : { data: [] as any[] };
+    const uPoints = new Map((upgrades ?? []).map((u: any) => [u.xws, u.points]));
+
+    const pilotCountBySquad = new Map<string, number>();
+    const pointsBySquad = new Map<string, number>();
+    for (const sp of sps ?? []) {
+      pilotCountBySquad.set(sp.squad_id, (pilotCountBySquad.get(sp.squad_id) ?? 0) + 1);
+      pointsBySquad.set(
+        sp.squad_id,
+        (pointsBySquad.get(sp.squad_id) ?? 0) + (pPoints.get(sp.pilot_xws) ?? 0),
+      );
+    }
+    const spIdToSquad = new Map((sps ?? []).map((sp) => [sp.id, sp.squad_id]));
+    for (const u of spUps ?? []) {
+      const sqId = spIdToSquad.get(u.squad_pilot_id);
+      if (!sqId) continue;
+      pointsBySquad.set(sqId, (pointsBySquad.get(sqId) ?? 0) + (uPoints.get(u.upgrade_xws) ?? 0));
+    }
+
+    return {
+      squads: (squads ?? []).map((s) => ({
+        ...s,
+        pilot_count: pilotCountBySquad.get(s.id) ?? 0,
+        total_points: pointsBySquad.get(s.id) ?? 0,
+      })),
+    };
+  });
+
 export const listMySquads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
