@@ -16,9 +16,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedSquadsIndexRouteImport } from './routes/_authenticated/squads.index'
+import { Route as AuthenticatedPlayersIndexRouteImport } from './routes/_authenticated/players.index'
 import { Route as AuthenticatedCompetitionsIndexRouteImport } from './routes/_authenticated/competitions.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedSquadsIdRouteImport } from './routes/_authenticated/squads.$id'
+import { Route as AuthenticatedPlayersIdRouteImport } from './routes/_authenticated/players.$id'
 import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authenticated/competitions.$id'
 import { Route as AuthenticatedAdminCatalogRouteImport } from './routes/_authenticated/admin.catalog'
 
@@ -57,6 +59,12 @@ const AuthenticatedSquadsIndexRoute =
     path: '/squads/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPlayersIndexRoute =
+  AuthenticatedPlayersIndexRouteImport.update({
+    id: '/players/',
+    path: '/players/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCompetitionsIndexRoute =
   AuthenticatedCompetitionsIndexRouteImport.update({
     id: '/competitions/',
@@ -71,6 +79,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
 const AuthenticatedSquadsIdRoute = AuthenticatedSquadsIdRouteImport.update({
   id: '/squads/$id',
   path: '/squads/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPlayersIdRoute = AuthenticatedPlayersIdRouteImport.update({
+  id: '/players/$id',
+  path: '/players/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCompetitionsIdRoute =
@@ -94,9 +107,11 @@ export interface FileRoutesByFullPath {
   '/browse': typeof AuthenticatedBrowseRoute
   '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/players/$id': typeof AuthenticatedPlayersIdRoute
   '/squads/$id': typeof AuthenticatedSquadsIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/competitions/': typeof AuthenticatedCompetitionsIndexRoute
+  '/players/': typeof AuthenticatedPlayersIndexRoute
   '/squads/': typeof AuthenticatedSquadsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -106,9 +121,11 @@ export interface FileRoutesByTo {
   '/browse': typeof AuthenticatedBrowseRoute
   '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/players/$id': typeof AuthenticatedPlayersIdRoute
   '/squads/$id': typeof AuthenticatedSquadsIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/competitions': typeof AuthenticatedCompetitionsIndexRoute
+  '/players': typeof AuthenticatedPlayersIndexRoute
   '/squads': typeof AuthenticatedSquadsIndexRoute
 }
 export interface FileRoutesById {
@@ -121,9 +138,11 @@ export interface FileRoutesById {
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/admin/catalog': typeof AuthenticatedAdminCatalogRoute
   '/_authenticated/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
+  '/_authenticated/players/$id': typeof AuthenticatedPlayersIdRoute
   '/_authenticated/squads/$id': typeof AuthenticatedSquadsIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/competitions/': typeof AuthenticatedCompetitionsIndexRoute
+  '/_authenticated/players/': typeof AuthenticatedPlayersIndexRoute
   '/_authenticated/squads/': typeof AuthenticatedSquadsIndexRoute
 }
 export interface FileRouteTypes {
@@ -136,9 +155,11 @@ export interface FileRouteTypes {
     | '/browse'
     | '/admin/catalog'
     | '/competitions/$id'
+    | '/players/$id'
     | '/squads/$id'
     | '/admin/'
     | '/competitions/'
+    | '/players/'
     | '/squads/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -148,9 +169,11 @@ export interface FileRouteTypes {
     | '/browse'
     | '/admin/catalog'
     | '/competitions/$id'
+    | '/players/$id'
     | '/squads/$id'
     | '/admin'
     | '/competitions'
+    | '/players'
     | '/squads'
   id:
     | '__root__'
@@ -162,9 +185,11 @@ export interface FileRouteTypes {
     | '/_authenticated/browse'
     | '/_authenticated/admin/catalog'
     | '/_authenticated/competitions/$id'
+    | '/_authenticated/players/$id'
     | '/_authenticated/squads/$id'
     | '/_authenticated/admin/'
     | '/_authenticated/competitions/'
+    | '/_authenticated/players/'
     | '/_authenticated/squads/'
   fileRoutesById: FileRoutesById
 }
@@ -226,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSquadsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/players/': {
+      id: '/_authenticated/players/'
+      path: '/players'
+      fullPath: '/players/'
+      preLoaderRoute: typeof AuthenticatedPlayersIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/competitions/': {
       id: '/_authenticated/competitions/'
       path: '/competitions'
@@ -245,6 +277,13 @@ declare module '@tanstack/react-router' {
       path: '/squads/$id'
       fullPath: '/squads/$id'
       preLoaderRoute: typeof AuthenticatedSquadsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/players/$id': {
+      id: '/_authenticated/players/$id'
+      path: '/players/$id'
+      fullPath: '/players/$id'
+      preLoaderRoute: typeof AuthenticatedPlayersIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/competitions/$id': {
@@ -281,8 +320,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCompetitionsIdRoute: typeof AuthenticatedCompetitionsIdRoute
+  AuthenticatedPlayersIdRoute: typeof AuthenticatedPlayersIdRoute
   AuthenticatedSquadsIdRoute: typeof AuthenticatedSquadsIdRoute
   AuthenticatedCompetitionsIndexRoute: typeof AuthenticatedCompetitionsIndexRoute
+  AuthenticatedPlayersIndexRoute: typeof AuthenticatedPlayersIndexRoute
   AuthenticatedSquadsIndexRoute: typeof AuthenticatedSquadsIndexRoute
 }
 
@@ -290,8 +331,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCompetitionsIdRoute: AuthenticatedCompetitionsIdRoute,
+  AuthenticatedPlayersIdRoute: AuthenticatedPlayersIdRoute,
   AuthenticatedSquadsIdRoute: AuthenticatedSquadsIdRoute,
   AuthenticatedCompetitionsIndexRoute: AuthenticatedCompetitionsIndexRoute,
+  AuthenticatedPlayersIndexRoute: AuthenticatedPlayersIndexRoute,
   AuthenticatedSquadsIndexRoute: AuthenticatedSquadsIndexRoute,
 }
 
@@ -308,3 +351,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
