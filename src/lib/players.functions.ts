@@ -15,7 +15,7 @@ export const listPlayers = createServerFn({ method: "GET" })
     const { data: closedComps } = await supabase
       .from("competitions")
       .select("id")
-      .eq("status", "closed");
+      .eq("status", "finished");
 
     const closedIds = (closedComps ?? []).map((c) => c.id);
 
