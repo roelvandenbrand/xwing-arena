@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
   listMySquads,
+  listPublicSquads,
   createSquad,
   deleteSquad,
   duplicateSquad,
