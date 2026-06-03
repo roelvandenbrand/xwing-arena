@@ -15,7 +15,7 @@ export const listPlayers = createServerFn({ method: "GET" })
     const { data: closedComps } = await supabase
       .from("competitions")
       .select("id")
-      .eq("status", "closed");
+      .eq("status", "finished");
 
     const closedIds = (closedComps ?? []).map((c) => c.id);
 
@@ -45,14 +45,21 @@ export const listPlayerSquads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ user_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
 
-    const { data: squads, error } = await supabase
+    const isOwnProfile = data.user_id === userId;
+    let query = supabase
       .from("squads")
       .select("*")
       .eq("user_id", data.user_id)
       .eq("is_snapshot", false)
       .order("updated_at", { ascending: false });
+
+    if (!isOwnProfile) {
+      query = query.eq("is_public", true);
+    }
+
+    const { data: squads, error } = await query;
     if (error) throw new Error(error.message);
 
     const ids = (squads ?? []).map((s) => s.id);

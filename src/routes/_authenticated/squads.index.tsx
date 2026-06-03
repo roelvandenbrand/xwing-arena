@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
   listMySquads,
+  listPublicSquads,
   createSquad,
   deleteSquad,
   duplicateSquad,
@@ -36,9 +37,21 @@ export const Route = createFileRoute("/_authenticated/squads/")({
 });
 
 function SquadsIndex() {
-  const fn = useServerFn(listMySquads);
+  const [tab, setTab] = useState<"mine" | "public">("mine");
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["my-squads"], queryFn: () => fn() });
+
+  const myFn = useServerFn(listMySquads);
+  const publicFn = useServerFn(listPublicSquads);
+  const { data: myData, isLoading: myLoading } = useQuery({
+    queryKey: ["my-squads"],
+    queryFn: () => myFn(),
+    enabled: tab === "mine",
+  });
+  const { data: publicData, isLoading: publicLoading } = useQuery({
+    queryKey: ["public-squads"],
+    queryFn: () => publicFn(),
+    enabled: tab === "public",
+  });
 
   const delFn = useServerFn(deleteSquad);
   const dupFn = useServerFn(duplicateSquad);
@@ -55,24 +68,57 @@ function SquadsIndex() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const squads = tab === "mine" ? myData?.squads : publicData?.squads;
+  const isLoading = tab === "mine" ? myLoading : publicLoading;
+  const isMine = tab === "mine";
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">My Squads</h1>
-        <NewSquadDialog />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Squads</h1>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={tab === "mine" ? "default" : "outline"}
+              onClick={() => setTab("mine")}
+            >
+              My squads
+            </Button>
+            <Button
+              size="sm"
+              variant={tab === "public" ? "default" : "outline"}
+              onClick={() => setTab("public")}
+            >
+              Public squads
+            </Button>
+          </div>
+        </div>
+        {isMine && <NewSquadDialog />}
       </div>
       {isLoading && <p className="text-muted-foreground">Loading…</p>}
-      {data && data.squads.length === 0 && (
-        <p className="text-muted-foreground">No squads yet. Create your first one above.</p>
+      {squads && squads.length === 0 && (
+        <p className="text-muted-foreground">
+          {isMine ? "No squads yet. Create your first one above." : "No public squads yet."}
+        </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data?.squads.map((s) => (
+        {squads?.map((s) => (
           <Card key={s.id}>
             <CardHeader>
-              <CardTitle className="text-lg">
+              <CardTitle className="text-lg flex items-center gap-2">
                 <Link to="/squads/$id" params={{ id: s.id }} className="hover:underline">
                   {s.name}
                 </Link>
+                {s.is_public ? (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                    Public
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    Private
+                  </span>
+                )}
               </CardTitle>
               <p className="text-xs text-muted-foreground capitalize">{s.faction}</p>
             </CardHeader>
@@ -80,23 +126,25 @@ function SquadsIndex() {
               <p className="text-sm">
                 {s.pilot_count} pilot{s.pilot_count === 1 ? "" : "s"} · {s.total_points} pts
               </p>
-              <div className="flex gap-2">
-                <Button asChild size="sm" variant="outline">
-                  <Link to="/squads/$id" params={{ id: s.id }}>Edit</Link>
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => dupMut.mutate({ data: { id: s.id } })}>
-                  Duplicate
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    if (confirm(`Delete "${s.name}"?`)) delMut.mutate({ data: { id: s.id } });
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
+              {isMine && (
+                <div className="flex gap-2">
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/squads/$id" params={{ id: s.id }}>Edit</Link>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => dupMut.mutate({ data: { id: s.id } })}>
+                    Duplicate
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      if (confirm(`Delete "${s.name}"?`)) delMut.mutate({ data: { id: s.id } });
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

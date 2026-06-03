@@ -24,6 +24,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 // Pilots store factions by full label; squads store a short code.
@@ -152,6 +154,25 @@ function SquadDetail() {
             {factionLabel} · {squadPilots.length} pilot{squadPilots.length === 1 ? "" : "s"} ·{" "}
             <span className="font-semibold text-foreground">{totalPoints} pts</span>
           </p>
+          {isOwner && (
+            <div className="flex items-center gap-2 mt-1">
+              <Switch
+                id="squad-public"
+                checked={squad.is_public}
+                onCheckedChange={(checked) =>
+                  updateMut.mutate({ data: { id: squad.id, is_public: checked } })
+                }
+              />
+              <Label htmlFor="squad-public" className="text-sm cursor-pointer">
+                {squad.is_public ? "Public squad" : "Private squad"}
+              </Label>
+            </div>
+          )}
+          {!isOwner && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {squad.is_public ? "Public squad" : "Private squad"}
+            </p>
+          )}
         </div>
         <Button asChild variant="outline">
           <Link to="/squads">← Back to squads</Link>
