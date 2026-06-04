@@ -412,9 +412,12 @@ function SquadDetail() {
                                         (u: any) =>
                                           u.slot === slot &&
                                           (!u.faction || allowedFactionLabels.includes(u.faction)) &&
-                                          (!u.ship_xws || (pilot?.ship_xws ?? "").startsWith(u.ship_xws.toLowerCase())),
+                                          (!u.ship_xws || (pilot?.ship_xws ?? "").startsWith(u.ship_xws.toLowerCase())) &&
+                                          (!limitToCollection || (collection.upgrades[u.xws] ?? 0) > 0),
                                       )}
                                       squadTotal={totalPoints}
+                                      ownedMap={collection.upgrades}
+                                      usedMap={upgradeUsed}
                                       onAdd={(xws) =>
                                         addUpMut.mutate({
                                           data: {
@@ -610,11 +613,15 @@ function AddUpgradeForSlotDialog({
   slot,
   upgrades,
   squadTotal,
+  ownedMap,
+  usedMap,
   onAdd,
 }: {
   slot: string;
   upgrades: any[];
   squadTotal: number;
+  ownedMap: Record<string, number>;
+  usedMap: Map<string, number>;
   onAdd: (xws: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -666,6 +673,22 @@ function AddUpgradeForSlotDialog({
                     <div className="text-xs text-muted-foreground">
                       {pts}pt → total {squadTotal + pts} pts
                     </div>
+                    {(() => {
+                      const owned = ownedMap[u.xws] ?? 0;
+                      const used = usedMap.get(u.xws) ?? 0;
+                      if (owned === 0) return null;
+                      if (used + 1 > owned)
+                        return (
+                          <div className="text-xs text-amber-600">
+                            ⚠ You only own {owned} (using {used + 1})
+                          </div>
+                        );
+                      return (
+                        <div className="text-xs text-muted-foreground">
+                          Owned {owned}, using {used}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <Button
