@@ -12,6 +12,7 @@ import {
   removeUpgradeFromPilot,
 } from "@/lib/squads.functions";
 import { listPilots, listUpgrades, listShips } from "@/lib/catalog.functions";
+import { getMyCollection } from "@/lib/packages.functions";
 import { FACTIONS } from "@/lib/games.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,14 @@ function SquadDetail() {
 
   const upgradesFn = useServerFn(listUpgrades);
   const { data: upgradesData } = useQuery({ queryKey: ["upgrades"], queryFn: () => upgradesFn() });
+
+  const collectionFn = useServerFn(getMyCollection);
+  const { data: collectionData } = useQuery({
+    queryKey: ["my-collection"],
+    queryFn: () => collectionFn(),
+  });
+  const [limitToCollection, setLimitToCollection] = useState(false);
+  const collection = collectionData?.collection ?? { ships: {}, pilots: {}, upgrades: {} };
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["squad", id] });
 
@@ -112,6 +121,17 @@ function SquadDetail() {
   const factionPilots = (pilotsData?.pilots ?? []).filter((p: any) =>
     allowedFactionLabels.includes(p.faction),
   );
+
+  // Counts of pieces already used in this squad (for overuse warnings).
+  const pilotUsed = new Map<string, number>();
+  for (const sp of squadPilots) pilotUsed.set(sp.pilot_xws, (pilotUsed.get(sp.pilot_xws) ?? 0) + 1);
+  const upgradeUsed = new Map<string, number>();
+  for (const u of squadPilotUpgrades)
+    upgradeUsed.set(u.upgrade_xws, (upgradeUsed.get(u.upgrade_xws) ?? 0) + 1);
+
+  const visibleFactionPilots = limitToCollection
+    ? factionPilots.filter((p: any) => (collection.pilots[p.xws] ?? 0) > 0)
+    : factionPilots;
 
   const totalPoints = squadPilots.reduce((acc: number, sp: any) => {
     const p: any = pilotByXws.get(sp.pilot_xws);
@@ -180,8 +200,21 @@ function SquadDetail() {
       </div>
 
       {isOwner && (
+        <div className="flex items-center gap-2">
+          <Switch
+            id="limit-collection"
+            checked={limitToCollection}
+            onCheckedChange={setLimitToCollection}
+          />
+          <Label htmlFor="limit-collection" className="text-sm cursor-pointer">
+            Limit to my collection
+          </Label>
+        </div>
+      )}
+
+      {isOwner && (
         <AddPilotDialog
-          factionPilots={factionPilots}
+          factionPilots={visibleFactionPilots}
           onAdd={(xws) => addPilotMut.mutate({ data: { squad_id: squad.id, pilot_xws: xws } })}
         />
       )}
@@ -379,9 +412,12 @@ function SquadDetail() {
                                         (u: any) =>
                                           u.slot === slot &&
                                           (!u.faction || allowedFactionLabels.includes(u.faction)) &&
-                                          (!u.ship_xws || (pilot?.ship_xws ?? "").startsWith(u.ship_xws.toLowerCase())),
+                                          (!u.ship_xws || (pilot?.ship_xws ?? "").startsWith(u.ship_xws.toLowerCase())) &&
+                                          (!limitToCollection || (collection.upgrades[u.xws] ?? 0) > 0),
                                       )}
                                       squadTotal={totalPoints}
+                                      ownedMap={collection.upgrades}
+                                      usedMap={upgradeUsed}
                                       onAdd={(xws) =>
                                         addUpMut.mutate({
                                           data: {
@@ -577,11 +613,15 @@ function AddUpgradeForSlotDialog({
   slot,
   upgrades,
   squadTotal,
+  ownedMap,
+  usedMap,
   onAdd,
 }: {
   slot: string;
   upgrades: any[];
   squadTotal: number;
+  ownedMap: Record<string, number>;
+  usedMap: Map<string, number>;
   onAdd: (xws: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -633,6 +673,22 @@ function AddUpgradeForSlotDialog({
                     <div className="text-xs text-muted-foreground">
                       {pts}pt → total {squadTotal + pts} pts
                     </div>
+                    {(() => {
+                      const owned = ownedMap[u.xws] ?? 0;
+                      const used = usedMap.get(u.xws) ?? 0;
+                      if (owned === 0) return null;
+                      if (used + 1 > owned)
+                        return (
+                          <div className="text-xs text-amber-600">
+                            ⚠ You only own {owned} (using {used + 1})
+                          </div>
+                        );
+                      return (
+                        <div className="text-xs text-muted-foreground">
+                          Owned {owned}, using {used}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <Button
