@@ -26,6 +26,7 @@ import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin.packages'
 import { Route as AuthenticatedAdminCatalogRouteImport } from './routes/_authenticated/admin.catalog'
 import { Route as AuthenticatedAdminPackagesIdRouteImport } from './routes/_authenticated/admin.packages.$id'
+import { Route as AuthenticatedAdminPackagesIndexRouteImport } from './routes/_authenticated/admin.packages.index'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -118,6 +119,12 @@ const AuthenticatedAdminPackagesIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminPackagesRoute,
   } as any)
+const AuthenticatedAdminPackagesIndexRoute =
+  AuthenticatedAdminPackagesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminPackagesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/players/': typeof AuthenticatedPlayersIndexRoute
   '/squads/': typeof AuthenticatedSquadsIndexRoute
   '/admin/packages/$id': typeof AuthenticatedAdminPackagesIdRoute
+  '/admin/packages/': typeof AuthenticatedAdminPackagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -153,6 +161,7 @@ export interface FileRoutesByTo {
   '/players': typeof AuthenticatedPlayersIndexRoute
   '/squads': typeof AuthenticatedSquadsIndexRoute
   '/admin/packages/$id': typeof AuthenticatedAdminPackagesIdRoute
+  '/admin/packages': typeof AuthenticatedAdminPackagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -173,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/players/': typeof AuthenticatedPlayersIndexRoute
   '/_authenticated/squads/': typeof AuthenticatedSquadsIndexRoute
   '/_authenticated/admin/packages/$id': typeof AuthenticatedAdminPackagesIdRoute
+  '/_authenticated/admin/packages/': typeof AuthenticatedAdminPackagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/players/'
     | '/squads/'
     | '/admin/packages/$id'
+    | '/admin/packages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,7 +212,6 @@ export interface FileRouteTypes {
     | '/browse'
     | '/collection'
     | '/admin/catalog'
-    | '/admin/packages'
     | '/competitions/$id'
     | '/players/$id'
     | '/squads/$id'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/players'
     | '/squads'
     | '/admin/packages/$id'
+    | '/admin/packages'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/players/'
     | '/_authenticated/squads/'
     | '/_authenticated/admin/packages/$id'
+    | '/_authenticated/admin/packages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -359,16 +371,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPackagesIdRouteImport
       parentRoute: typeof AuthenticatedAdminPackagesRoute
     }
+    '/_authenticated/admin/packages/': {
+      id: '/_authenticated/admin/packages/'
+      path: '/'
+      fullPath: '/admin/packages/'
+      preLoaderRoute: typeof AuthenticatedAdminPackagesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminPackagesRoute
+    }
   }
 }
 
 interface AuthenticatedAdminPackagesRouteChildren {
   AuthenticatedAdminPackagesIdRoute: typeof AuthenticatedAdminPackagesIdRoute
+  AuthenticatedAdminPackagesIndexRoute: typeof AuthenticatedAdminPackagesIndexRoute
 }
 
 const AuthenticatedAdminPackagesRouteChildren: AuthenticatedAdminPackagesRouteChildren =
   {
     AuthenticatedAdminPackagesIdRoute: AuthenticatedAdminPackagesIdRoute,
+    AuthenticatedAdminPackagesIndexRoute: AuthenticatedAdminPackagesIndexRoute,
   }
 
 const AuthenticatedAdminPackagesRouteWithChildren =
