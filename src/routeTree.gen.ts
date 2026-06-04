@@ -24,6 +24,7 @@ import { Route as AuthenticatedPlayersIdRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCompetitionsIdRouteImport } from './routes/_authenticated/competitions.$id'
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin.packages'
 import { Route as AuthenticatedAdminCatalogRouteImport } from './routes/_authenticated/admin.catalog'
+import { Route as AuthenticatedAdminPackagesIdRouteImport } from './routes/_authenticated/admin.packages.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -105,6 +106,12 @@ const AuthenticatedAdminCatalogRoute =
     path: '/catalog',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPackagesIdRoute =
+  AuthenticatedAdminPackagesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminPackagesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -113,7 +120,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/browse': typeof AuthenticatedBrowseRoute
   '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
-  '/admin/packages': typeof AuthenticatedAdminPackagesRoute
+  '/admin/packages': typeof AuthenticatedAdminPackagesRouteWithChildren
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/players/$id': typeof AuthenticatedPlayersIdRoute
   '/squads/$id': typeof AuthenticatedSquadsIdRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/competitions/': typeof AuthenticatedCompetitionsIndexRoute
   '/players/': typeof AuthenticatedPlayersIndexRoute
   '/squads/': typeof AuthenticatedSquadsIndexRoute
+  '/admin/packages/$id': typeof AuthenticatedAdminPackagesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -128,7 +136,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/admin/catalog': typeof AuthenticatedAdminCatalogRoute
-  '/admin/packages': typeof AuthenticatedAdminPackagesRoute
+  '/admin/packages': typeof AuthenticatedAdminPackagesRouteWithChildren
   '/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/players/$id': typeof AuthenticatedPlayersIdRoute
   '/squads/$id': typeof AuthenticatedSquadsIdRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
   '/competitions': typeof AuthenticatedCompetitionsIndexRoute
   '/players': typeof AuthenticatedPlayersIndexRoute
   '/squads': typeof AuthenticatedSquadsIndexRoute
+  '/admin/packages/$id': typeof AuthenticatedAdminPackagesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,7 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/admin/catalog': typeof AuthenticatedAdminCatalogRoute
-  '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
+  '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRouteWithChildren
   '/_authenticated/competitions/$id': typeof AuthenticatedCompetitionsIdRoute
   '/_authenticated/players/$id': typeof AuthenticatedPlayersIdRoute
   '/_authenticated/squads/$id': typeof AuthenticatedSquadsIdRoute
@@ -154,6 +163,7 @@ export interface FileRoutesById {
   '/_authenticated/competitions/': typeof AuthenticatedCompetitionsIndexRoute
   '/_authenticated/players/': typeof AuthenticatedPlayersIndexRoute
   '/_authenticated/squads/': typeof AuthenticatedSquadsIndexRoute
+  '/_authenticated/admin/packages/$id': typeof AuthenticatedAdminPackagesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/competitions/'
     | '/players/'
     | '/squads/'
+    | '/admin/packages/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/competitions'
     | '/players'
     | '/squads'
+    | '/admin/packages/$id'
   id:
     | '__root__'
     | '/'
@@ -204,6 +216,7 @@ export interface FileRouteTypes {
     | '/_authenticated/competitions/'
     | '/_authenticated/players/'
     | '/_authenticated/squads/'
+    | '/_authenticated/admin/packages/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -320,18 +333,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCatalogRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/packages/$id': {
+      id: '/_authenticated/admin/packages/$id'
+      path: '/$id'
+      fullPath: '/admin/packages/$id'
+      preLoaderRoute: typeof AuthenticatedAdminPackagesIdRouteImport
+      parentRoute: typeof AuthenticatedAdminPackagesRoute
+    }
   }
 }
 
+interface AuthenticatedAdminPackagesRouteChildren {
+  AuthenticatedAdminPackagesIdRoute: typeof AuthenticatedAdminPackagesIdRoute
+}
+
+const AuthenticatedAdminPackagesRouteChildren: AuthenticatedAdminPackagesRouteChildren =
+  {
+    AuthenticatedAdminPackagesIdRoute: AuthenticatedAdminPackagesIdRoute,
+  }
+
+const AuthenticatedAdminPackagesRouteWithChildren =
+  AuthenticatedAdminPackagesRoute._addFileChildren(
+    AuthenticatedAdminPackagesRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCatalogRoute: typeof AuthenticatedAdminCatalogRoute
-  AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
+  AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCatalogRoute: AuthenticatedAdminCatalogRoute,
-  AuthenticatedAdminPackagesRoute: AuthenticatedAdminPackagesRoute,
+  AuthenticatedAdminPackagesRoute: AuthenticatedAdminPackagesRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
