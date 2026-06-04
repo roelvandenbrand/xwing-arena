@@ -178,11 +178,8 @@ export const removePackageContent = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { table, col } = tableFor(data.kind);
-    const { error } = await context.supabase
-      .from(table as any)
-      .delete()
-      .eq("package_id", data.package_id)
-      .eq(col as any, data.xws);
+    const sb = context.supabase as any;
+    const { error } = await sb.from(table).delete().eq("package_id", data.package_id).eq(col, data.xws);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
