@@ -12,6 +12,7 @@ import {
   removeUpgradeFromPilot,
 } from "@/lib/squads.functions";
 import { listPilots, listUpgrades, listShips } from "@/lib/catalog.functions";
+import { getMyCollection } from "@/lib/packages.functions";
 import { FACTIONS } from "@/lib/games.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,14 @@ function SquadDetail() {
 
   const upgradesFn = useServerFn(listUpgrades);
   const { data: upgradesData } = useQuery({ queryKey: ["upgrades"], queryFn: () => upgradesFn() });
+
+  const collectionFn = useServerFn(getMyCollection);
+  const { data: collectionData } = useQuery({
+    queryKey: ["my-collection"],
+    queryFn: () => collectionFn(),
+  });
+  const [limitToCollection, setLimitToCollection] = useState(false);
+  const collection = collectionData?.collection ?? { ships: {}, pilots: {}, upgrades: {} };
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["squad", id] });
 
