@@ -23,6 +23,13 @@ function AdminLayout() {
         >
           Catalog (Ships / Pilots / Upgrades)
         </Link>
+        <Link
+          to="/admin/packages"
+          className="px-3 py-2 hover:text-foreground text-muted-foreground"
+          activeProps={{ className: "px-3 py-2 font-semibold border-b-2 border-primary text-foreground" }}
+        >
+          Packages
+        </Link>
       </nav>
       <Outlet />
     </div>
