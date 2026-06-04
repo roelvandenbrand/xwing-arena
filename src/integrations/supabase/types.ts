@@ -185,6 +185,156 @@ export type Database = {
           },
         ]
       }
+      package_pilots: {
+        Row: {
+          created_at: string
+          id: string
+          package_id: string
+          pilot_xws: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          package_id: string
+          pilot_xws: string
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          package_id?: string
+          pilot_xws?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_pilots_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_pilots_pilot_xws_fkey"
+            columns: ["pilot_xws"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["xws"]
+          },
+        ]
+      }
+      package_ships: {
+        Row: {
+          created_at: string
+          id: string
+          package_id: string
+          quantity: number
+          ship_xws: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          package_id: string
+          quantity?: number
+          ship_xws: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          package_id?: string
+          quantity?: number
+          ship_xws?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_ships_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_ships_ship_xws_fkey"
+            columns: ["ship_xws"]
+            isOneToOne: false
+            referencedRelation: "ships"
+            referencedColumns: ["xws"]
+          },
+        ]
+      }
+      package_upgrades: {
+        Row: {
+          created_at: string
+          id: string
+          package_id: string
+          quantity: number
+          upgrade_xws: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          package_id: string
+          quantity?: number
+          upgrade_xws: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          package_id?: string
+          quantity?: number
+          upgrade_xws?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_upgrades_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_upgrades_upgrade_xws_fkey"
+            columns: ["upgrade_xws"]
+            isOneToOne: false
+            referencedRelation: "upgrades"
+            referencedColumns: ["xws"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          created_at: string
+          id: string
+          image: string | null
+          name: string
+          release_date: string | null
+          updated_at: string
+          wave: string | null
+          xws: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image?: string | null
+          name: string
+          release_date?: string | null
+          updated_at?: string
+          wave?: string | null
+          xws: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image?: string | null
+          name?: string
+          release_date?: string | null
+          updated_at?: string
+          wave?: string | null
+          xws?: string
+        }
+        Relationships: []
+      }
       pilots: {
         Row: {
           created_at: string
@@ -483,6 +633,44 @@ export type Database = {
           xws?: string
         }
         Relationships: []
+      }
+      user_packages: {
+        Row: {
+          acquired_at: string | null
+          created_at: string
+          id: string
+          package_id: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string | null
+          created_at?: string
+          id?: string
+          package_id: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string | null
+          created_at?: string
+          id?: string
+          package_id?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_packages_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
