@@ -122,6 +122,17 @@ function SquadDetail() {
     allowedFactionLabels.includes(p.faction),
   );
 
+  // Counts of pieces already used in this squad (for overuse warnings).
+  const pilotUsed = new Map<string, number>();
+  for (const sp of squadPilots) pilotUsed.set(sp.pilot_xws, (pilotUsed.get(sp.pilot_xws) ?? 0) + 1);
+  const upgradeUsed = new Map<string, number>();
+  for (const u of squadPilotUpgrades)
+    upgradeUsed.set(u.upgrade_xws, (upgradeUsed.get(u.upgrade_xws) ?? 0) + 1);
+
+  const visibleFactionPilots = limitToCollection
+    ? factionPilots.filter((p: any) => (collection.pilots[p.xws] ?? 0) > 0)
+    : factionPilots;
+
   const totalPoints = squadPilots.reduce((acc: number, sp: any) => {
     const p: any = pilotByXws.get(sp.pilot_xws);
     const pPts = p?.points ?? 0;
@@ -189,8 +200,21 @@ function SquadDetail() {
       </div>
 
       {isOwner && (
+        <div className="flex items-center gap-2">
+          <Switch
+            id="limit-collection"
+            checked={limitToCollection}
+            onCheckedChange={setLimitToCollection}
+          />
+          <Label htmlFor="limit-collection" className="text-sm cursor-pointer">
+            Limit to my collection
+          </Label>
+        </div>
+      )}
+
+      {isOwner && (
         <AddPilotDialog
-          factionPilots={factionPilots}
+          factionPilots={visibleFactionPilots}
           onAdd={(xws) => addPilotMut.mutate({ data: { squad_id: squad.id, pilot_xws: xws } })}
         />
       )}
