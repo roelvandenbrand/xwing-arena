@@ -116,7 +116,7 @@ export const updatePackage = createServerFn({ method: "POST" })
     if ("release_date" in patch && !patch.release_date) patch.release_date = null;
     const { error } = await context.supabase
       .from("packages")
-      .update(patch)
+      .update(patch as any)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -155,11 +155,11 @@ export const setPackageContent = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { table, col } = tableFor(data.kind);
     const { error } = await context.supabase
-      .from(table)
+      .from(table as any)
       .upsert(
         { package_id: data.package_id, [col]: data.xws, quantity: data.quantity },
         { onConflict: `package_id,${col}` },
-      );
+      ) as any;
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -179,10 +179,10 @@ export const removePackageContent = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { table, col } = tableFor(data.kind);
     const { error } = await context.supabase
-      .from(table)
+      .from(table as any)
       .delete()
       .eq("package_id", data.package_id)
-      .eq(col, data.xws);
+      .eq(col as any, data.xws);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
