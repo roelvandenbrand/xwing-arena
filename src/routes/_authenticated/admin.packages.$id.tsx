@@ -148,7 +148,12 @@ function ContentsSection({
 
   const catalog = useQuery({
     queryKey: [kind === "ship" ? "ships" : kind === "pilot" ? "pilots" : "upgrades"],
-    queryFn: () => (kind === "ship" ? shipsFn() : kind === "pilot" ? pilotsFn() : upgradesFn()),
+    queryFn: async () =>
+      kind === "ship"
+        ? ((await shipsFn()) as any)
+        : kind === "pilot"
+          ? ((await pilotsFn()) as any)
+          : ((await upgradesFn()) as any),
   });
 
   const items = useMemo(() => {
