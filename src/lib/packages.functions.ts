@@ -184,6 +184,36 @@ export const removePackageContent = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- Item detail (which packages contain a given xws) ----------
+
+export const getItemDetails = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({ kind: z.enum(["ship", "pilot", "upgrade"]), xws: z.string().min(1) })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { table, col } = tableFor(data.kind);
+    const { data: rows } = await supabase
+      .from(table as any)
+      .select("package_id, quantity")
+      .eq(col as any, data.xws);
+    const packageIds = (rows ?? []).map((r: any) => r.package_id);
+    const { data: pkgs } = packageIds.length
+      ? await supabase.from("packages").select("id, name, wave").in("id", packageIds)
+      : { data: [] as any[] };
+    const pkgMap = new Map((pkgs ?? []).map((p: any) => [p.id, p]));
+    return {
+      foundIn: (rows ?? []).map((r: any) => ({
+        quantity: r.quantity,
+        name: pkgMap.get(r.package_id)?.name ?? "Unknown",
+        wave: pkgMap.get(r.package_id)?.wave ?? null,
+      })),
+    };
+  });
+
 // ---------- User ownership ----------
 
 export const listMyOwnership = createServerFn({ method: "GET" })
