@@ -297,7 +297,7 @@ function ItemDetailDialog({
             <p className="text-xs text-muted-foreground">Not found in any package.</p>
           )}
           <ul className="space-y-0.5">
-            {data?.foundIn.map((p, i) => (
+            {data?.foundIn.map((p: any, i: number) => (
               <li key={i} className="text-sm flex items-center justify-between">
                 <span>{p.name}{p.wave ? <span className="text-xs text-muted-foreground ml-1">({p.wave})</span> : null}</span>
                 <span className="text-muted-foreground tabular-nums">×{p.quantity}</span>
