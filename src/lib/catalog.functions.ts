@@ -18,6 +18,8 @@ const shipSchema = z.object({
   dial: z.array(z.string()).default([]),
   size: z.string().nullable().optional(),
   legacy_id: z.number().int().nullable().optional(),
+  image: z.string().nullable().optional(),
+  dial_image: z.string().nullable().optional(),
 });
 
 const pilotSchema = z.object({

@@ -419,10 +419,12 @@ export type Database = {
           attack: number | null
           created_at: string
           dial: string[]
+          dial_image: string | null
           faction: string[]
           firing_arcs: string[]
           hull: number | null
           id: string
+          image: string | null
           legacy_id: number | null
           maneuvers: Json | null
           name: string
@@ -437,10 +439,12 @@ export type Database = {
           attack?: number | null
           created_at?: string
           dial?: string[]
+          dial_image?: string | null
           faction?: string[]
           firing_arcs?: string[]
           hull?: number | null
           id?: string
+          image?: string | null
           legacy_id?: number | null
           maneuvers?: Json | null
           name: string
@@ -455,10 +459,12 @@ export type Database = {
           attack?: number | null
           created_at?: string
           dial?: string[]
+          dial_image?: string | null
           faction?: string[]
           firing_arcs?: string[]
           hull?: number | null
           id?: string
+          image?: string | null
           legacy_id?: number | null
           maneuvers?: Json | null
           name?: string

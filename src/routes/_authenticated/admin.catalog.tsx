@@ -29,6 +29,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/image-upload";
 
 export const Route = createFileRoute("/_authenticated/admin/catalog")({
   head: () => ({ meta: [{ title: "Catalog — X-Wing League" }] }),
@@ -189,6 +190,20 @@ function ShipsList() {
               <NumField label="Agility" value={editing.agility} onChange={(v) => setEditing({ ...editing, agility: v })} />
               <NumField label="Hull" value={editing.hull} onChange={(v) => setEditing({ ...editing, hull: v })} />
               <NumField label="Shields" value={editing.shields} onChange={(v) => setEditing({ ...editing, shields: v })} />
+              <ImageUpload
+                label="Ship image"
+                value={editing.image ?? ""}
+                onChange={(url) => setEditing({ ...editing, image: url })}
+                pathBase={`ships/${editing.xws}`}
+                previewClassName="h-40 w-auto"
+              />
+              <ImageUpload
+                label="Maneuver dial image"
+                value={editing.dial_image ?? ""}
+                onChange={(url) => setEditing({ ...editing, dial_image: url })}
+                pathBase={`ships/${editing.xws}-dial`}
+                previewClassName="h-40 w-auto"
+              />
             </div>
           )}
           <DialogFooter>
@@ -206,6 +221,8 @@ function ShipsList() {
                       agility: editing.agility,
                       hull: editing.hull,
                       shields: editing.shields,
+                      image: editing.image || null,
+                      dial_image: editing.dial_image || null,
                     },
                   },
                 });

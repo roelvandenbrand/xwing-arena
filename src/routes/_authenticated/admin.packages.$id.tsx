@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/image-upload";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/packages/$id")({
@@ -98,8 +99,13 @@ function EditPackagePage() {
               <Input type="date" value={releaseDate} onChange={(e) => setReleaseDate(e.target.value)} />
             </div>
             <div className="md:col-span-2">
-              <Label>Image URL</Label>
-              <Input value={image} onChange={(e) => setImage(e.target.value)} />
+              <Label>Image</Label>
+              <ImageUpload
+                value={image}
+                onChange={(url) => setImage(url)}
+                pathBase={`packages/${(xws || data.pkg.xws).trim()}`}
+                previewClassName="h-40 w-auto"
+              />
             </div>
           </div>
           <div className="mt-3">

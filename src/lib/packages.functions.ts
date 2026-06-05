@@ -196,10 +196,11 @@ export const getItemDetails = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { table, col } = tableFor(data.kind);
-    const { data: rows } = await supabase
-      .from(table as any)
+    const sb = supabase as any;
+    const { data: rows } = await sb
+      .from(table)
       .select("package_id, quantity")
-      .eq(col as any, data.xws);
+      .eq(col, data.xws);
     const packageIds = (rows ?? []).map((r: any) => r.package_id);
     const { data: pkgs } = packageIds.length
       ? await supabase.from("packages").select("id, name, wave").in("id", packageIds)
