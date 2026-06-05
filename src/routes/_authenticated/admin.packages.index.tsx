@@ -173,7 +173,6 @@ function CreatePackageDialog({
   const [xwsTouched, setXwsTouched] = useState(false);
   const [wave, setWave] = useState("");
   const [releaseDate, setReleaseDate] = useState("");
-  const [image, setImage] = useState("");
   const [busy, setBusy] = useState(false);
 
   const reset = () => {
@@ -182,7 +181,6 @@ function CreatePackageDialog({
     setXwsTouched(false);
     setWave("");
     setReleaseDate("");
-    setImage("");
   };
 
   return (
@@ -231,10 +229,9 @@ function CreatePackageDialog({
               <Input type="date" value={releaseDate} onChange={(e) => setReleaseDate(e.target.value)} />
             </div>
           </div>
-          <div>
-            <Label>Image URL</Label>
-            <Input value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            You can upload an image after creating the package on the edit page.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
@@ -250,7 +247,7 @@ function CreatePackageDialog({
                   xws: xws.trim(),
                   wave: wave.trim() || null,
                   release_date: releaseDate || null,
-                  image: image.trim() || null,
+                  image: null,
                 });
                 setOpen(false);
                 reset();
