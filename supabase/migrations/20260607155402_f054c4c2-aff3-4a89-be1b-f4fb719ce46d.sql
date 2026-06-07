@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "catalog-images public read" ON storage.objects;
