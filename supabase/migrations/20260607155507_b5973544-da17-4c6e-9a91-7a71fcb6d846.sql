@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.enforce_game_update_restrictions() FROM PUBLIC, anon, authenticated;
