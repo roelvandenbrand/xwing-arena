@@ -699,6 +699,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_singles: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          quantity: number
+          updated_at: string
+          user_id: string
+          xws: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+          xws: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+          xws?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

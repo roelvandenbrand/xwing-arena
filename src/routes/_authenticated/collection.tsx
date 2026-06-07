@@ -8,6 +8,8 @@ import {
   setMyPackageQuantity,
   getMyCollection,
   getItemDetails,
+  listMySingles,
+  setMySingleQuantity,
 } from "@/lib/packages.functions";
 import { listShips, listPilots, listUpgrades } from "@/lib/catalog.functions";
 import { Card, CardContent } from "@/components/ui/card";
@@ -186,6 +188,11 @@ function WhatIHave() {
 
   return (
     <>
+      <AddSingles
+        shipMap={shipMap}
+        pilotMap={pilotMap}
+        upgradeMap={upgradeMap}
+      />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CollectionList
           title="Ships"
@@ -214,6 +221,176 @@ function WhatIHave() {
         upgradeMap={upgradeMap}
       />
     </>
+  );
+}
+
+function AddSingles({
+  shipMap,
+  pilotMap,
+  upgradeMap,
+}: {
+  shipMap: Map<string, any>;
+  pilotMap: Map<string, any>;
+  upgradeMap: Map<string, any>;
+}) {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listMySingles);
+  const setFn = useServerFn(setMySingleQuantity);
+  const { data } = useQuery({ queryKey: ["my-singles"], queryFn: () => listFn() });
+
+  const [kind, setKind] = useState<"ship" | "pilot" | "upgrade">("pilot");
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const setMut = useMutation({
+    mutationFn: setFn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-singles"] });
+      qc.invalidateQueries({ queryKey: ["my-collection"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const lookup = kind === "ship" ? shipMap : kind === "pilot" ? pilotMap : upgradeMap;
+  const options = useMemo(() => {
+    if (!query) return [] as { xws: string; name: string; sub?: string }[];
+    const q = query.toLowerCase();
+    const out: { xws: string; name: string; sub?: string }[] = [];
+    for (const [xws, item] of lookup.entries()) {
+      const name = item.name ?? xws;
+      if (!name.toLowerCase().includes(q)) continue;
+      const sub =
+        kind === "pilot"
+          ? `${item.faction ?? ""} · ${item.ship_xws ?? ""}`
+          : kind === "upgrade"
+          ? `${item.slot ?? ""}${item.points != null ? ` · ${item.points}pt` : ""}`
+          : Array.isArray(item.faction)
+          ? item.faction.join(", ")
+          : item.faction;
+      out.push({ xws, name, sub });
+      if (out.length >= 20) break;
+    }
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }, [query, lookup, kind]);
+
+  const singles = data?.singles ?? [];
+  const nameOf = (kind: string, xws: string) => {
+    const m = kind === "ship" ? shipMap : kind === "pilot" ? pilotMap : upgradeMap;
+    return m.get(xws)?.name ?? xws;
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-3">
+        <div>
+          <h2 className="font-semibold">Add singles</h2>
+          <p className="text-xs text-muted-foreground">
+            Track individual ship miniatures, pilot cards, or upgrade cards you bought on their own.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Tabs value={kind} onValueChange={(v) => { setKind(v as any); setQuery(""); }}>
+            <TabsList>
+              <TabsTrigger value="ship">Ship</TabsTrigger>
+              <TabsTrigger value="pilot">Pilot</TabsTrigger>
+              <TabsTrigger value="upgrade">Upgrade</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="relative flex-1 min-w-[220px]">
+            <Input
+              placeholder={`Search ${kind}s…`}
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 150)}
+            />
+            {open && options.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full max-h-72 overflow-auto rounded-md border bg-popover shadow">
+                {options.map((o) => (
+                  <button
+                    key={o.xws}
+                    type="button"
+                    className="w-full text-left px-3 py-1.5 hover:bg-accent text-sm flex justify-between gap-2"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      const current = singles.find((s) => s.kind === kind && s.xws === o.xws);
+                      setMut.mutate({
+                        data: { kind, xws: o.xws, quantity: (current?.quantity ?? 0) + 1 },
+                      });
+                      setQuery("");
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="truncate">{o.name}</span>
+                    {o.sub && <span className="text-xs text-muted-foreground shrink-0">{o.sub}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {singles.length > 0 && (
+          <div className="space-y-1 pt-2 border-t">
+            <p className="text-xs font-semibold text-muted-foreground">Your singles</p>
+            <ul className="divide-y text-sm">
+              {singles
+                .slice()
+                .sort((a, b) =>
+                  a.kind === b.kind
+                    ? nameOf(a.kind, a.xws).localeCompare(nameOf(b.kind, b.xws))
+                    : a.kind.localeCompare(b.kind),
+                )
+                .map((s) => (
+                  <li key={s.id} className="flex items-center justify-between py-1.5 gap-2">
+                    <div className="min-w-0">
+                      <span className="text-xs uppercase text-muted-foreground mr-2">{s.kind}</span>
+                      <span className="truncate">{nameOf(s.kind, s.xws)}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 w-6 p-0 text-xs"
+                        onClick={() =>
+                          setMut.mutate({
+                            data: { kind: s.kind, xws: s.xws, quantity: Math.max(0, s.quantity - 1) },
+                          })
+                        }
+                      >
+                        −
+                      </Button>
+                      <span className="w-8 text-center tabular-nums">×{s.quantity}</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 w-6 p-0 text-xs"
+                        onClick={() =>
+                          setMut.mutate({
+                            data: { kind: s.kind, xws: s.xws, quantity: s.quantity + 1 },
+                          })
+                        }
+                      >
+                        +
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs text-muted-foreground"
+                        onClick={() =>
+                          setMut.mutate({ data: { kind: s.kind, xws: s.xws, quantity: 0 } })
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
