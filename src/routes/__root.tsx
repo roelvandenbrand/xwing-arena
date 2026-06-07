@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
+import md5 from "blueimp-md5";
 
 function NotFoundComponent() {
   return (
@@ -129,6 +130,9 @@ function RootComponent() {
 
 function AppShell() {
   const { user, isAdmin, signOut, loading } = useAuth();
+  const gravatar = user?.email
+    ? `https://www.gravatar.com/avatar/${md5(user.email.trim().toLowerCase())}?s=64&d=identicon`
+    : null;
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-card">
@@ -158,6 +162,20 @@ function AppShell() {
                   Admin
                 </Link>
               )}
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 hover:underline"
+                activeProps={{ className: "font-semibold underline" }}
+              >
+                {gravatar && (
+                  <img
+                    src={gravatar}
+                    alt="Profile"
+                    className="h-7 w-7 rounded-full border"
+                  />
+                )}
+                <span>Profile</span>
+              </Link>
               <button
                 onClick={() => signOut()}
                 className="text-muted-foreground hover:text-foreground"
