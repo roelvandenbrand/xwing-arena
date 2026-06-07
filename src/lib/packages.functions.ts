@@ -285,31 +285,84 @@ export const getMyCollection = createServerFn({ method: "GET" })
     const ships: CollectionMap = {};
     const pilots: CollectionMap = {};
     const upgrades: CollectionMap = {};
-    if (!owned || owned.length === 0) {
-      return { collection: { ships, pilots, upgrades } };
+
+    if (owned && owned.length > 0) {
+      const packageIds = owned.map((o: any) => o.package_id);
+      const qtyByPkg = new Map<string, number>(owned.map((o: any) => [o.package_id, o.quantity]));
+
+      const [{ data: pShips }, { data: pPilots }, { data: pUpgrades }] = await Promise.all([
+        supabase.from("package_ships").select("package_id, ship_xws, quantity").in("package_id", packageIds),
+        supabase.from("package_pilots").select("package_id, pilot_xws, quantity").in("package_id", packageIds),
+        supabase.from("package_upgrades").select("package_id, upgrade_xws, quantity").in("package_id", packageIds),
+      ]);
+
+      for (const r of pShips ?? []) {
+        const mult = qtyByPkg.get(r.package_id) ?? 0;
+        ships[r.ship_xws] = (ships[r.ship_xws] ?? 0) + r.quantity * mult;
+      }
+      for (const r of pPilots ?? []) {
+        const mult = qtyByPkg.get(r.package_id) ?? 0;
+        pilots[r.pilot_xws] = (pilots[r.pilot_xws] ?? 0) + r.quantity * mult;
+      }
+      for (const r of pUpgrades ?? []) {
+        const mult = qtyByPkg.get(r.package_id) ?? 0;
+        upgrades[r.upgrade_xws] = (upgrades[r.upgrade_xws] ?? 0) + r.quantity * mult;
+      }
     }
 
-    const packageIds = owned.map((o: any) => o.package_id);
-    const qtyByPkg = new Map<string, number>(owned.map((o: any) => [o.package_id, o.quantity]));
-
-    const [{ data: pShips }, { data: pPilots }, { data: pUpgrades }] = await Promise.all([
-      supabase.from("package_ships").select("package_id, ship_xws, quantity").in("package_id", packageIds),
-      supabase.from("package_pilots").select("package_id, pilot_xws, quantity").in("package_id", packageIds),
-      supabase.from("package_upgrades").select("package_id, upgrade_xws, quantity").in("package_id", packageIds),
-    ]);
-
-    for (const r of pShips ?? []) {
-      const mult = qtyByPkg.get(r.package_id) ?? 0;
-      ships[r.ship_xws] = (ships[r.ship_xws] ?? 0) + r.quantity * mult;
-    }
-    for (const r of pPilots ?? []) {
-      const mult = qtyByPkg.get(r.package_id) ?? 0;
-      pilots[r.pilot_xws] = (pilots[r.pilot_xws] ?? 0) + r.quantity * mult;
-    }
-    for (const r of pUpgrades ?? []) {
-      const mult = qtyByPkg.get(r.package_id) ?? 0;
-      upgrades[r.upgrade_xws] = (upgrades[r.upgrade_xws] ?? 0) + r.quantity * mult;
+    // Add singles
+    const { data: singles } = await (supabase as any)
+      .from("user_singles")
+      .select("kind, xws, quantity")
+      .eq("user_id", userId);
+    for (const s of singles ?? []) {
+      const map = s.kind === "ship" ? ships : s.kind === "pilot" ? pilots : upgrades;
+      map[s.xws] = (map[s.xws] ?? 0) + s.quantity;
     }
 
     return { collection: { ships, pilots, upgrades } };
+  });
+
+// ---------- Singles ----------
+
+export const listMySingles = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data, error } = await (supabase as any)
+      .from("user_singles")
+      .select("id, kind, xws, quantity")
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { singles: (data ?? []) as { id: string; kind: "ship" | "pilot" | "upgrade"; xws: string; quantity: number }[] };
+  });
+
+export const setMySingleQuantity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      kind: z.enum(["ship", "pilot", "upgrade"]),
+      xws: z.string().min(1).max(120),
+      quantity: z.number().int().min(0).max(999),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const sb = supabase as any;
+    if (data.quantity === 0) {
+      const { error } = await sb
+        .from("user_singles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("kind", data.kind)
+        .eq("xws", data.xws);
+      if (error) throw new Error(error.message);
+      return { ok: true };
+    }
+    const { error } = await sb.from("user_singles").upsert(
+      { user_id: userId, kind: data.kind, xws: data.xws, quantity: data.quantity },
+      { onConflict: "user_id,kind,xws" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
