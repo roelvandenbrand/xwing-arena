@@ -1,50 +1,90 @@
-# Monetization Plan
+## 1. Faction grouping (Imperial ↔ First Order, Rebel ↔ Resistance)
 
-Add a €1.00/month **Pro** subscription via **Paddle** that removes Google AdSense ads. All app features remain free for everyone.
+Pilots store `faction` as a free-text label (e.g. `"Galactic Empire"`, `"First Order"`, `"Rebel Alliance"`, `"Resistance"`, `"Scum and Villainy"`). Today the squad builder filters pilots by an exact match to a single label, so cross-faction mixing is impossible.
 
-## 1. Payments — Paddle
+- Introduce a `FACTION_GROUPS` map (frontend):
+  - `imperial` → `["Galactic Empire", "First Order"]`
+  - `rebel` → `["Rebel Alliance", "Resistance"]`
+  - `scum` → `["Scum and Villainy"]`
+- In `squads.$id.tsx`, replace the single-label filter with a group-membership check using this map. This affects:
+  - the faction → pilots filter in `SquadDetail`
+  - the ship list in `AddPilotDialog` (ships that have at least one pilot in the squad's faction group)
+- Leave the existing 3-value `FACTIONS` export untouched (games still use the short code). Only the catalog filter logic changes.
 
-1. Run `recommend_payment_provider` to confirm Paddle eligibility for this product (X-Wing competition tracker / SaaS).
-2. Enable Paddle via `enable_paddle_payments`. A sandbox environment is created automatically; live requires Paddle account verification later.
-3. Create one product in Paddle: **Pro** — €1.00/month recurring subscription. No tiers, no extras.
-4. Implement the Lovable Payments checkout flow per the post-enable knowledge:
-   - "Upgrade to Pro" button → Paddle checkout overlay.
-   - Webhook handler at `src/routes/api/public/paddle-webhook.ts` validates Paddle signatures and updates subscription state.
-   - New `public.subscriptions` table (user_id, status, current_period_end, paddle_subscription_id) with RLS — users read their own row; webhook writes via service role.
-   - Server function `getMySubscription()` returning `{ isPro: boolean }`, called by a `useIsPro()` hook.
+No DB migration required — pilots keep their existing faction label.
 
-## 2. Google AdSense
+## 2. Bigger pilot card + slots in two rows
 
-1. Add a single `<AdSlot />` component in `src/components/ad-slot.tsx` that:
-   - Injects the AdSense script once (in `__root.tsx` `<head>` via TanStack `head()`).
-   - Renders `<ins class="adsbygoogle">` with a passed `slot` id.
-   - Returns `null` when `useIsPro()` is true.
-2. Place ad slots in 3 sensible spots:
-   - Below the header on `/` (home).
-   - In-content on `/browse` (above the competition list).
-   - Sidebar/footer on `/collection`.
-3. AdSense publisher ID + slot IDs stored as **client-side env vars** (`VITE_ADSENSE_CLIENT_ID`, `VITE_ADSENSE_SLOT_*`). These are public by design.
-4. Add a brief "Ads on this site" note + "Remove ads with Pro" CTA linking to a new `/pro` page.
+In `squads.$id.tsx`, for each `squadPilots` entry:
 
-## 3. Pro upgrade page
+- Render pilot image roughly 3× current size (`h-24` → ~`h-72`, with `max-w-[18rem]`), aligned left.
+- To the right of the pilot image, render the slots grid as a 2-row, multi-column flex/grid (e.g. `grid-cols-[repeat(auto-fill,minmax(180px,1fr))] grid-rows-2 auto-flow-column` — actual layout chosen to fit the slot count cleanly with wrapping).
+- Pilot name / stats stay above the slot grid in the right column.
 
-New route `src/routes/_authenticated/pro.tsx`:
-- Shows current status (Free / Pro until <date>).
-- "Upgrade — €1/month" button → Paddle checkout.
-- "Manage subscription" link to Paddle customer portal when already Pro.
-- Cancel handled via Paddle portal (webhook syncs status).
+## 3. Bigger upgrade thumbnails with hover-to-read full text
 
-Add a "Pro" link to the top nav in `__root.tsx` (visible to all signed-in users, shows ✓ when active).
+For filled slots:
+- Upgrade thumbnail roughly 2× current (`h-12` → ~`h-24`, width auto).
+- Wrap the upgrade row in `HoverCard` (shadcn) — `HoverCardTrigger` is the thumbnail/name; `HoverCardContent` shows the upgrade card text (`u.text`, rendered via `dangerouslySetInnerHTML` since text is HTML per the admin form), name, slot, and points.
 
-## 4. What I need from you before building
+## 4. Slot-aware upgrade filtering by faction + ship
 
-- Your AdSense **publisher ID** (`ca-pub-XXXXXXXXXXXXX`) and 3 **ad slot IDs** — create them at https://adsense.google.com after AdSense approves your site. Until then I'll render placeholder slots so the layout is in place.
-- Confirmation to proceed with enabling Paddle (you'll fill in the Paddle signup form — email, business name, etc.).
+`AddUpgradeForSlotDialog` already filters by `slot`. Extend the filter:
+
+- Pass the squad's faction code and the pilot's `ship_xws` into the dialog.
+- Keep an upgrade if **all** of the following hold:
+  - `u.slot === slot`
+  - `!u.faction` OR `u.faction` is in the squad's faction group (using the same `FACTION_GROUPS` map)
+  - `!u.ship_xws` OR `u.ship_xws === pilot.ship_xws`
+
+## 5. New upgrade fields: `faction`, `ship_xws`, `grants[]`
+
+Add three nullable columns to `public.upgrades`:
+
+- `faction text` — single faction label this upgrade is restricted to (e.g. `"First Order"`), null = any
+- `ship_xws text` — single ship this upgrade is restricted to, null = any
+- `grants text[] default '{}'` — list of extra slot names this upgrade grants when equipped
+
+Migration:
+
+```sql
+ALTER TABLE public.upgrades
+  ADD COLUMN IF NOT EXISTS faction text,
+  ADD COLUMN IF NOT EXISTS ship_xws text,
+  ADD COLUMN IF NOT EXISTS grants text[] NOT NULL DEFAULT '{}';
+```
+
+Update `upgradeSchema` in `src/lib/catalog.functions.ts` to include the new optional fields so `updateUpgrade` / `importUpgrades` accept them.
+
+## 6. Admin "Edit upgrade" UI
+
+In `admin.catalog.tsx` upgrade edit dialog, add:
+
+- **Faction restriction** — `<select>` with options: *Any*, `Galactic Empire`, `First Order`, `Rebel Alliance`, `Resistance`, `Scum and Villainy`. *Any* writes `null`.
+- **Ship restriction** — searchable select sourced from `listShips`, with an *Any* option that writes `null`.
+- **Grants extra slots** — multi-select / checkbox group over a known slot list (Astromech, Cannon, Crew, Device, Force Power, Gunner, Hardpoint, Illicit, Missile, Modification, Sensor, Talent, Tech, Title, Torpedo, Turret). Stored as `text[]`.
+
+Wire these three fields into the `updateUpgrade` patch payload.
+
+## 7. Slots granted by upgrades show up in the builder
+
+When computing the slot list for a pilot in `squads.$id.tsx`, concatenate:
+
+- `pilot.slots` (base)
+- For each equipped upgrade on this pilot: append `upgrade.grants` (in equip order).
+
+The combined list drives the slot grid rendering. Granted slots use the same slot-aware upgrade filter from §4. Removing an upgrade that granted slots also removes any upgrades occupying those granted slots (cascade by trimming to the new slot length; entries beyond the new length are deleted via `removeUpgradeFromPilot`).
 
 ## Technical notes
 
-- Subscription source of truth = Paddle webhook → `subscriptions` table. Never trust client-side claims.
-- `useIsPro()` reads via TanStack Query against `getMySubscription` server fn (cached, invalidated on auth change and after returning from checkout).
-- AdSense script is loaded for everyone (even Pro) only if not yet loaded; `<AdSlot />` simply doesn't render the `<ins>` for Pro users — cleanest and avoids hydration flicker.
-- All Paddle secrets (`PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`) provisioned by `enable_paddle_payments`; no manual secret entry needed.
-- Pro plan required on Lovable to use Payments — confirm you're on Pro.
+- Files touched:
+  - `src/routes/_authenticated/squads.$id.tsx` — faction grouping, layout, hover card, slot filtering, granted-slot handling
+  - `src/routes/_authenticated/admin.catalog.tsx` — upgrade edit dialog (faction / ship / grants)
+  - `src/lib/catalog.functions.ts` — extend `upgradeSchema`
+  - New migration adding `faction`, `ship_xws`, `grants` to `public.upgrades`
+- No changes to RLS or games. No changes to the squad's stored `faction` column (still the short code).
+- `HoverCard` is already a shadcn component in the project (`src/components/ui/hover-card.tsx`).
+
+## Open question
+
+The slot list in §6 is hard-coded. Is the list above complete, or should I derive it dynamically from all distinct `slot` values currently in the `upgrades` table?
