@@ -9,6 +9,7 @@ interface AuthCtx {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isSuperuser: boolean;
   refreshRole: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -19,21 +20,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperuser, setIsSuperuser] = useState(false);
   const router = useRouter();
   const qc = useQueryClient();
 
   const checkRole = async (userId: string | undefined) => {
     if (!userId) {
       setIsAdmin(false);
+      setIsSuperuser(false);
       return;
     }
     const { data } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    setIsAdmin(!!data);
+      .in("role", ["admin", "superuser"]);
+    const roles = (data ?? []).map((r) => r.role);
+    setIsAdmin(roles.includes("admin"));
+    setIsSuperuser(roles.includes("superuser"));
   };
 
   useEffect(() => {
@@ -62,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         isAdmin,
+        isSuperuser,
         refreshRole: () => checkRole(session?.user.id),
         signOut: async () => {
           await supabase.auth.signOut();

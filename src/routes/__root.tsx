@@ -129,7 +129,7 @@ function RootComponent() {
 }
 
 function AppShell() {
-  const { user, isAdmin, signOut, loading } = useAuth();
+  const { user, isAdmin, isSuperuser, signOut, loading } = useAuth();
   const gravatar = user?.email
     ? `https://www.gravatar.com/avatar/${md5(user.email.trim().toLowerCase())}?s=64&d=identicon`
     : null;
@@ -157,7 +157,7 @@ function AppShell() {
               <Link to="/browse" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
                 Browse
               </Link>
-              {isAdmin && (
+              {(isAdmin || isSuperuser) && (
                 <Link to="/admin" className="hover:underline" activeProps={{ className: "font-semibold underline" }}>
                   Admin
                 </Link>

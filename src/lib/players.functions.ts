@@ -41,6 +41,75 @@ export const listPlayers = createServerFn({ method: "GET" })
     };
   });
 
+export const listUsersWithRoles = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: adminCheck } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!adminCheck) throw new Error("Forbidden");
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .order("display_name");
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("user_id, role");
+
+    const rolesByUser = new Map<string, string[]>();
+    for (const r of roles ?? []) {
+      const list = rolesByUser.get(r.user_id) ?? [];
+      list.push(r.role);
+      rolesByUser.set(r.user_id, list);
+    }
+
+    return {
+      users: (profiles ?? []).map((p) => ({
+        id: p.id,
+        display_name: p.display_name,
+        roles: rolesByUser.get(p.id) ?? [],
+      })),
+    };
+  });
+
+export const setUserSuperuser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ user_id: z.string().uuid(), superuser: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: adminCheck } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!adminCheck) throw new Error("Forbidden");
+
+    if (data.superuser) {
+      const { error } = await supabase
+        .from("user_roles")
+        .upsert({ user_id: data.user_id, role: "superuser" }, { onConflict: "user_id,role" });
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.user_id)
+        .eq("role", "superuser");
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
+
 export const listPlayerSquads = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ user_id: z.string().uuid() }).parse(d))

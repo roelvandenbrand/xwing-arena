@@ -12,15 +12,16 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 function AdminPage() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isSuperuser, user } = useAuth();
+  const canAccess = isAdmin || isSuperuser;
   const fn = useServerFn(listMyCompetitions);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-competitions", user?.id],
     queryFn: () => fn(),
-    enabled: isAdmin,
+    enabled: canAccess,
   });
 
-  if (!isAdmin) {
+  if (!canAccess) {
     return (
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">Admin</h1>
@@ -36,7 +37,7 @@ function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Admin panel</h1>
+      <h1 className="text-2xl font-bold">Competitions</h1>
       <p className="text-sm text-muted-foreground">
         Manage join requests, game confirmations, and lifecycle from each competition's page.
       </p>
