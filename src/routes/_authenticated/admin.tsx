@@ -1,10 +1,12 @@
 import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
 function AdminLayout() {
+  const { isAdmin } = useAuth();
   return (
     <div className="space-y-4">
       <nav className="flex gap-2 border-b text-sm">
@@ -16,20 +18,31 @@ function AdminLayout() {
         >
           Competitions
         </Link>
-        <Link
-          to="/admin/catalog"
-          className="px-3 py-2 hover:text-foreground text-muted-foreground"
-          activeProps={{ className: "px-3 py-2 font-semibold border-b-2 border-primary text-foreground" }}
-        >
-          Catalog (Ships / Pilots / Upgrades)
-        </Link>
-        <Link
-          to="/admin/packages"
-          className="px-3 py-2 hover:text-foreground text-muted-foreground"
-          activeProps={{ className: "px-3 py-2 font-semibold border-b-2 border-primary text-foreground" }}
-        >
-          Packages
-        </Link>
+        {isAdmin && (
+          <>
+            <Link
+              to="/admin/catalog"
+              className="px-3 py-2 hover:text-foreground text-muted-foreground"
+              activeProps={{ className: "px-3 py-2 font-semibold border-b-2 border-primary text-foreground" }}
+            >
+              Catalog (Ships / Pilots / Upgrades)
+            </Link>
+            <Link
+              to="/admin/packages"
+              className="px-3 py-2 hover:text-foreground text-muted-foreground"
+              activeProps={{ className: "px-3 py-2 font-semibold border-b-2 border-primary text-foreground" }}
+            >
+              Packages
+            </Link>
+            <Link
+              to="/admin/users"
+              className="px-3 py-2 hover:text-foreground text-muted-foreground"
+              activeProps={{ className: "px-3 py-2 font-semibold border-b-2 border-primary text-foreground" }}
+            >
+              Users
+            </Link>
+          </>
+        )}
       </nav>
       <Outlet />
     </div>

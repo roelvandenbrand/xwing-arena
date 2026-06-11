@@ -9,12 +9,14 @@ export const listMyCompetitions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data: isAdminRows } = await supabase
+    const { data: roleRows } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "admin");
-    const isAdmin = (isAdminRows?.length ?? 0) > 0;
+      .in("role", ["admin", "superuser"]);
+    const roles = (roleRows ?? []).map((r) => r.role);
+    const isAdmin = roles.includes("admin");
+    const isSuperuser = roles.includes("superuser");
 
     if (isAdmin) {
       const { data, error } = await supabase
@@ -22,7 +24,17 @@ export const listMyCompetitions = createServerFn({ method: "GET" })
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
-      return { competitions: data ?? [], isAdmin };
+      return { competitions: data ?? [], isAdmin, isSuperuser };
+    }
+
+    if (isSuperuser) {
+      const { data, error } = await supabase
+        .from("competitions")
+        .select("*")
+        .eq("created_by", userId)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return { competitions: data ?? [], isAdmin, isSuperuser };
     }
 
     // approved member of
@@ -33,7 +45,7 @@ export const listMyCompetitions = createServerFn({ method: "GET" })
     const approvedIds = (memberships ?? []).filter((m) => m.status === "approved").map((m) => m.competition_id);
     const pendingIds = (memberships ?? []).filter((m) => m.status === "pending").map((m) => m.competition_id);
     if (approvedIds.length === 0 && pendingIds.length === 0) {
-      return { competitions: [], isAdmin, pendingIds };
+      return { competitions: [], isAdmin, isSuperuser, pendingIds };
     }
     const ids = [...new Set([...approvedIds, ...pendingIds])];
     const { data, error } = await supabase
@@ -42,7 +54,7 @@ export const listMyCompetitions = createServerFn({ method: "GET" })
       .in("id", ids)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return { competitions: data ?? [], isAdmin, pendingIds };
+    return { competitions: data ?? [], isAdmin, isSuperuser, pendingIds };
   });
 
 export const listOpenCompetitions = createServerFn({ method: "GET" })
@@ -165,8 +177,9 @@ export const getCompetition = createServerFn({ method: "GET" })
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "admin");
-    const isAdmin = (roleRows?.length ?? 0) > 0;
+      .in("role", ["admin", "superuser"]);
+    const roles = (roleRows ?? []).map((r) => r.role);
+    const isAdmin = roles.includes("admin") || (roles.includes("superuser") && comp.created_by === userId);
 
     const myMembership = (members ?? []).find((m) => m.user_id === userId) ?? null;
 

@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/competitions/")({
 });
 
 function CompetitionsPage() {
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, isSuperuser, user } = useAuth();
   const fn = useServerFn(listMyCompetitions);
   const { data, isLoading } = useQuery({
     queryKey: ["my-competitions", user?.id],
@@ -46,7 +46,7 @@ function CompetitionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">My Competitions</h1>
-        {isAdmin && <CreateDialog />}
+        {(isAdmin || isSuperuser) && <CreateDialog />}
       </div>
       {isLoading && <p className="text-muted-foreground">Loading…</p>}
       {!isLoading && (data?.competitions.length ?? 0) === 0 && (
