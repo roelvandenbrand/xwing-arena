@@ -21,8 +21,15 @@ function gravatarUrl(email: string, size = 160) {
   return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=identicon`;
 }
 
+const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+];
+
 function ProfilePage() {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const email = user?.email ?? "";
 
   const [pw, setPw] = useState("");
