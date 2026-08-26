@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useTheme, type Theme } from "@/hooks/use-theme";
+import { Monitor, Moon, Sun } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "My Profile — X-Wing League" }] }),
@@ -19,8 +21,15 @@ function gravatarUrl(email: string, size = 160) {
   return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=identicon`;
 }
 
+const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+];
+
 function ProfilePage() {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const email = user?.email ?? "";
 
   const [pw, setPw] = useState("");
@@ -71,6 +80,31 @@ function ProfilePage() {
               . Change it there to update here.
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <Button
+                key={value}
+                type="button"
+                variant={theme === value ? "default" : "outline"}
+                onClick={() => setTheme(value)}
+                className="justify-center gap-2"
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Saved on this device. "System" follows your device setting.
+          </p>
         </CardContent>
       </Card>
 
