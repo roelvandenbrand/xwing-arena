@@ -85,6 +85,31 @@ function ProfilePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <Button
+                key={value}
+                type="button"
+                variant={theme === value ? "default" : "outline"}
+                onClick={() => setTheme(value)}
+                className="justify-center gap-2"
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Saved on this device. "System" follows your device setting.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Change password</CardTitle>
         </CardHeader>
         <CardContent>
