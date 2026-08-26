@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { ThemeProvider, themeInitScript } from "@/hooks/use-theme";
 import { Toaster } from "@/components/ui/sonner";
 import md5 from "blueimp-md5";
 
